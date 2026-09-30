@@ -13,6 +13,7 @@ SAMPLE_DATA_DIR = DATA_DIR / "sample"
 REPORTS_DIR = PROJECT_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
 DOCS_DIR = PROJECT_ROOT / "docs"
+MODELS_DIR = PROJECT_ROOT / "models"
 
 # Raw File Names
 FEATURES_FILE = "elliptic_txs_features.csv"
@@ -44,6 +45,7 @@ def ensure_directories_exist():
         REPORTS_DIR,
         FIGURES_DIR,
         DOCS_DIR,
+        MODELS_DIR,
     ]
     for directory in directories:
         directory.mkdir(parents=True, exist_ok=True)

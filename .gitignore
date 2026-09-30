@@ -14,3 +14,7 @@ venv/
 .ipynb_checkpoints/
 # Processed graph artifacts
 data/processed/
+# Trained model artifacts
+models/*.pth
+models/*.pt
+models/*.joblib

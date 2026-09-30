@@ -19,18 +19,29 @@ project/
 │   ├── processed/           # Processed graph data (Stage 2)
 │   └── sample/              # Synthetic sample data for offline testing
 ├── docs/
-│   └── eda_report.md        # Comprehensive Markdown EDA Report
+│   ├── eda_report.md        # Comprehensive Markdown EDA Report
+│   └── stage3_report.md     # Baseline Models & GCN Benchmark Report
+├── models/                  # Saved model checkpoints (Stage 3)
+│   ├── logistic_regression.joblib
+│   ├── random_forest.joblib
+│   └── gcn_model.pth
 ├── notebooks/
 │   └── 01_exploratory_data_analysis.ipynb # Interactive EDA Notebook
 ├── reports/
-│   └── figures/             # High-resolution generated EDA plots (.png)
+│   ├── stage3_metrics.json  # Comprehensive metric export
+│   ├── stage3_metrics.csv   # Metrics comparison table
+│   └── figures/             # High-resolution generated plots (.png)
 │       ├── class_distribution.png
 │       ├── unknown_vs_labelled.png
 │       ├── timestep_distribution.png
 │       ├── illicit_ratio_over_time.png
 │       ├── node_degree_distribution.png
 │       ├── feature_correlation_sample.png
-│       └── subgraph_sample.png
+│       ├── subgraph_sample.png
+│       ├── stage3_roc_curves.png
+│       ├── stage3_pr_curves.png
+│       ├── stage3_confusion_matrices.png
+│       └── stage3_metrics_comparison.png
 ├── src/
 │   ├── __init__.py
 │   ├── config.py            # Global configuration parameters & constants
@@ -51,16 +62,24 @@ project/
 │   │   ├── preprocessor.py  # Feature cleaning, leak-free normalization & split masks
 │   │   ├── builder.py       # PyTorch Geometric Data construction & topology stats
 │   │   └── saver.py         # PyG graph serialization & I/O utilities
-│   ├── models/              # Dynamic GNN models (Stage 3)
-│   ├── evaluation/          # Evaluation & benchmarks (Stage 4)
+│   ├── models/              # Baseline ML & PyG GCN Models (Stage 3)
+│   │   ├── __init__.py
+│   │   ├── baselines.py     # Logistic Regression & Random Forest classifiers
+│   │   └── gcn.py           # PyG GCN model architecture & weighted loss trainer
+│   ├── evaluation/          # Metrics & Benchmarks (Stage 3)
+│   │   ├── __init__.py
+│   │   ├── metrics.py       # Accuracy, Precision, Recall, F1, Macro-F1, ROC-AUC, CM
+│   │   └── visualizer.py    # ROC, PR, Confusion Matrix, and bar plot engine
 │   ├── backend/             # REST API Backend (Stage 5)
 │   └── frontend/            # Web UI Frontend (Stage 6)
 ├── tests/
 │   ├── __init__.py
 │   ├── test_loader.py       # Stage 1 unit tests
-│   └── test_stage2.py       # Stage 2 unit tests
+│   ├── test_stage2.py       # Stage 2 unit tests
+│   └── test_stage3.py       # Stage 3 unit tests
 ├── run_eda.py               # Main CLI script for EDA pipeline
 ├── run_stage2.py            # Main CLI script for Stage 2 pipeline
+├── run_stage3.py            # Main CLI script for Stage 3 baseline & GCN pipeline
 ├── requirements.txt         # Required Python dependencies
 └── README.md                # Project documentation
 ```
@@ -113,11 +132,33 @@ python run_stage2.py
   python run_stage2.py --train-start 1 --train-end 34 --val-start 35 --val-end 39 --test-start 40 --test-end 49
   ```
 
-### Saved Artifacts (`data/processed/`):
-- `elliptic_pyg_data.pt`: Unified full PyTorch Geometric `Data` graph object (203,769 nodes, 234,355 edges, 166 features).
-- `elliptic_temporal_snapshots.pt`: List of 49 discrete temporal `Data` graph snapshots (one per timestep).
-- `scaler.pt`: Fitted `StandardScaler` state for feature normalization.
-- `preprocessing_metadata.json`: Preprocessing metrics, graph topology statistics, and validation checks.
+---
+
+## 🤖 Running Baseline Models & GCN Training (Stage 3)
+
+To train and evaluate Logistic Regression, Random Forest, and PyTorch Geometric GCN models while preserving temporal masks and handling severe class imbalance:
+
+```bash
+python run_stage3.py
+```
+
+### Options:
+- **Run with synthetic sample dataset (Offline/Fast Test):**
+  ```bash
+  python run_stage3.py --use-sample
+  ```
+- **Custom GCN hyperparameters:**
+  ```bash
+  python run_stage3.py --epochs 100 --lr 0.01 --hidden-dim 64 --dropout 0.2
+  ```
+
+### Evaluated Metrics:
+- Accuracy, Precision (Illicit), Recall (Illicit), F1-Score (Illicit), Macro-F1, ROC-AUC, Confusion Matrix (TN, FP, FN, TP).
+
+### Saved Model Checkpoints (`models/`):
+- `logistic_regression.joblib`: Trained Logistic Regression baseline.
+- `random_forest.joblib`: Trained Random Forest baseline.
+- `gcn_model.pth`: Trained PyTorch Geometric GCN checkpoint.
 
 ---
 
@@ -133,7 +174,7 @@ jupyter notebook notebooks/01_exploratory_data_analysis.ipynb
 
 ## 🧪 Running Unit Tests
 
-To verify that the dataset loader, validator, preprocessor, graph builder, PyG schemas, and sample generators function correctly:
+To verify dataset loading, preprocessor, graph builder, baseline models, GCN trainer, evaluation metrics, and visualization engines:
 
 ```bash
 python -m pytest tests/
@@ -145,8 +186,9 @@ python -m pytest tests/
 
 - [x] **Stage 1: Initial Setup, Dataset Download, Validation & EDA** *(Completed)*
 - [x] **Stage 2: Dynamic Graph Construction & PyTorch Geometric Integration** *(Completed)*
-- [ ] **Stage 3: Dynamic GNN Model Implementations (EvolveGCN / GCN / GAT)**
-- [ ] **Stage 4: Model Training, Hyperparameter Tuning & Benchmark Evaluation**
+- [x] **Stage 3: Baseline Models & Basic GCN Model Implementation** *(Completed)*
+- [ ] **Stage 4: Advanced Dynamic Temporal GNNs (EvolveGCN / GAT) & Hyperparameter Tuning**
 - [ ] **Stage 5: REST API Backend (FastAPI / Flask)**
 - [ ] **Stage 6: Interactive Web Dashboard Frontend**
+
 

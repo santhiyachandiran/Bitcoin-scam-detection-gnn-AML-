@@ -1,0 +1,222 @@
+{
+    "validation_metrics": [
+        {
+            "model_name": "Logistic Regression",
+            "split_name": "Validation",
+            "num_samples": 5486,
+            "num_illicit": 447,
+            "num_licit": 5039,
+            "accuracy": 0.7838133430550492,
+            "precision": 0.2674638137193203,
+            "recall": 0.9507829977628636,
+            "f1_score": 0.4174852652259332,
+            "macro_f1": 0.6423818447884366,
+            "roc_auc": 0.9199314696596969,
+            "confusion_matrix": [
+                [
+                    3875,
+                    1164
+                ],
+                [
+                    22,
+                    425
+                ]
+            ],
+            "tn": 3875,
+            "fp": 1164,
+            "fn": 22,
+            "tp": 425
+        },
+        {
+            "model_name": "Random Forest",
+            "split_name": "Validation",
+            "num_samples": 5486,
+            "num_illicit": 447,
+            "num_licit": 5039,
+            "accuracy": 0.9892453518045935,
+            "precision": 0.9429223744292238,
+            "recall": 0.9239373601789709,
+            "f1_score": 0.9333333333333333,
+            "macro_f1": 0.9637421103069959,
+            "roc_auc": 0.9881492590456631,
+            "confusion_matrix": [
+                [
+                    5014,
+                    25
+                ],
+                [
+                    34,
+                    413
+                ]
+            ],
+            "tn": 5014,
+            "fp": 25,
+            "fn": 34,
+            "tp": 413
+        },
+        {
+            "model_name": "GCN Model",
+            "split_name": "Validation",
+            "num_samples": 5486,
+            "num_illicit": 447,
+            "num_licit": 5039,
+            "accuracy": 0.8100619759387532,
+            "precision": 0.26739640344018767,
+            "recall": 0.7651006711409396,
+            "f1_score": 0.3962920046349942,
+            "macro_f1": 0.6417973109915183,
+            "roc_auc": 0.8626529623744636,
+            "confusion_matrix": [
+                [
+                    4102,
+                    937
+                ],
+                [
+                    105,
+                    342
+                ]
+            ],
+            "tn": 4102,
+            "fp": 937,
+            "fn": 105,
+            "tp": 342
+        },
+        {
+            "model_name": "Recurrent GCN (Dynamic)",
+            "split_name": "Validation",
+            "num_samples": 5486,
+            "num_illicit": 447,
+            "num_licit": 5039,
+            "accuracy": 0.8913598250091141,
+            "precision": 0.40533672172808133,
+            "recall": 0.7136465324384788,
+            "f1_score": 0.5170178282009724,
+            "macro_f1": 0.7279071478240434,
+            "roc_auc": 0.8815050214590179,
+            "confusion_matrix": [
+                [
+                    4571,
+                    468
+                ],
+                [
+                    128,
+                    319
+                ]
+            ],
+            "tn": 4571,
+            "fp": 468,
+            "fn": 128,
+            "tp": 319
+        }
+    ],
+    "test_metrics": [
+        {
+            "model_name": "Logistic Regression",
+            "split_name": "Test",
+            "num_samples": 11184,
+            "num_illicit": 636,
+            "num_licit": 10548,
+            "accuracy": 0.7398068669527897,
+            "precision": 0.15587167070217917,
+            "recall": 0.809748427672956,
+            "f1_score": 0.2614213197969543,
+            "macro_f1": 0.5517547232802874,
+            "roc_auc": 0.854942395708865,
+            "confusion_matrix": [
+                [
+                    7759,
+                    2789
+                ],
+                [
+                    121,
+                    515
+                ]
+            ],
+            "tn": 7759,
+            "fp": 2789,
+            "fn": 121,
+            "tp": 515
+        },
+        {
+            "model_name": "Random Forest",
+            "split_name": "Test",
+            "num_samples": 11184,
+            "num_illicit": 636,
+            "num_licit": 10548,
+            "accuracy": 0.970225321888412,
+            "precision": 0.835920177383592,
+            "recall": 0.5927672955974843,
+            "f1_score": 0.6936522539098436,
+            "macro_f1": 0.8390022464981763,
+            "roc_auc": 0.8857929787279714,
+            "confusion_matrix": [
+                [
+                    10474,
+                    74
+                ],
+                [
+                    259,
+                    377
+                ]
+            ],
+            "tn": 10474,
+            "fp": 74,
+            "fn": 259,
+            "tp": 377
+        },
+        {
+            "model_name": "GCN Model",
+            "split_name": "Test",
+            "num_samples": 11184,
+            "num_illicit": 636,
+            "num_licit": 10548,
+            "accuracy": 0.85568669527897,
+            "precision": 0.18893129770992367,
+            "recall": 0.4669811320754717,
+            "f1_score": 0.26902173913043476,
+            "macro_f1": 0.5944811076604555,
+            "roc_auc": 0.7767042188688786,
+            "confusion_matrix": [
+                [
+                    9273,
+                    1275
+                ],
+                [
+                    339,
+                    297
+                ]
+            ],
+            "tn": 9273,
+            "fp": 1275,
+            "fn": 339,
+            "tp": 297
+        },
+        {
+            "model_name": "Recurrent GCN (Dynamic)",
+            "split_name": "Test",
+            "num_samples": 11184,
+            "num_illicit": 636,
+            "num_licit": 10548,
+            "accuracy": 0.9193490701001431,
+            "precision": 0.33207070707070707,
+            "recall": 0.41352201257861637,
+            "f1_score": 0.36834733893557425,
+            "macro_f1": 0.6626359426292007,
+            "roc_auc": 0.8135568637411963,
+            "confusion_matrix": [
+                [
+                    10019,
+                    529
+                ],
+                [
+                    373,
+                    263
+                ]
+            ],
+            "tn": 10019,
+            "fp": 529,
+            "fn": 373,
+            "tp": 263
+        }
+    ]
+}

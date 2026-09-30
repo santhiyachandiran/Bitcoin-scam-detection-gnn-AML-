@@ -263,3 +263,53 @@ def plot_metrics_comparison(
 
     logger.info(f"Saved metrics comparison figure to {output_path}")
     return output_path
+
+
+def plot_training_loss(
+    training_history: Dict[str, List[float]],
+    output_path: Path,
+    title: str = "Training and Validation Loss Curve (Stage 4 Dynamic GNN)",
+) -> Path:
+    """
+    Plot training loss and validation loss over epochs.
+
+    Args:
+        training_history: Dictionary containing 'train_loss' and 'val_loss' lists.
+        output_path: Path to save figure.
+        title: Plot title.
+
+    Returns:
+        Path of saved figure.
+    """
+    fig, ax1 = plt.subplots(figsize=(8, 5), dpi=300)
+
+    train_loss = training_history.get("train_loss", [])
+    val_loss = training_history.get("val_loss", [])
+    epochs = np.arange(1, len(train_loss) + 1)
+
+    ax1.plot(epochs, train_loss, label="Train Loss", color="#1f77b4", lw=2)
+    ax1.plot(epochs, val_loss, label="Validation Loss", color="#ff7f0e", lw=2, linestyle="--")
+
+    ax1.set_xlabel("Epoch", fontsize=12, fontweight="bold")
+    ax1.set_ylabel("Weighted BCE Loss", fontsize=12, fontweight="bold")
+    ax1.set_title(title, fontsize=13, fontweight="bold", pad=15)
+    ax1.legend(loc="upper right", frameon=True, facecolor="white", edgecolor="none")
+    ax1.grid(True, linestyle=":", alpha=0.6)
+
+    if "val_f1" in training_history and len(training_history["val_f1"]) == len(epochs):
+        ax2 = ax1.twinx()
+        ax2.plot(epochs, training_history["val_f1"], label="Val F1 (Illicit)", color="#2ca02c", lw=1.5, linestyle=":")
+        ax2.set_ylabel("Validation F1 Score", fontsize=12, fontweight="bold", color="#2ca02c")
+        ax2.tick_params(axis="y", labelcolor="#2ca02c")
+        ax2.set_ylim([0.0, 1.05])
+        ax2.grid(False)
+
+    plt.tight_layout()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+    logger.info(f"Saved training loss curve figure to {output_path}")
+    return output_path
+

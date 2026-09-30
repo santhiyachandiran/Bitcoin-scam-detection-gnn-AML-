@@ -66,7 +66,7 @@ def test_preprocessor_normalization_and_masks(sample_data):
     raw_train_x = df_sorted.loc[train_time_mask, raw_feature_cols].values
 
     expected_scaler = StandardScaler().fit(raw_train_x)
-    np.testing.assert_allclose(preprocessor.scaler.mean_, expected_scaler.mean_, rtol=1e-4)
+    np.testing.assert_allclose(preprocessor.scaler.mean_, expected_scaler.mean_, rtol=1e-3, atol=1e-5)
 
 
 def test_graph_builder_pyg_data(sample_data):

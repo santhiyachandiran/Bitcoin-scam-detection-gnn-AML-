@@ -177,7 +177,28 @@ python run_stage4.py
 | **Logistic Regression** | 0.7398 | 0.1559 | **0.8097** | 0.2614 | 0.5518 | 0.8549 |
 | **Random Forest** | **0.9702** | **0.8359** | 0.5928 | **0.6937** | **0.8390** | **0.8858** |
 | **Static GCN (Transductive)** | 0.8557 | 0.1889 | 0.4670 | 0.2690 | 0.5945 | 0.7767 |
-| **Recurrent GCN (Dynamic)** | 0.9193 | 0.3321 | 0.4135 | **0.3683** | **0.6626** | **0.8136** |
+| **Recurrent GCN (Dynamic)** | 0.9193 | 0.3321 | 0.4135 | **0.3683** | **0.6626** | 0.8136 |
+| **Triplet Transformer GNN** | **0.8902** | 0.2691 | **0.5425** | 0.3597 | 0.6499 | **0.8312** |
+
+---
+
+## ⚡ Running Triplet-Style Dynamic GNN with Transformer Encoder (Stage 5)
+
+To train and evaluate the **Triplet-Style Dynamic Graph Network with Transformer Encoder** across 49 discrete temporal graph snapshots:
+
+```bash
+python run_stage5.py
+```
+
+### Options:
+- **Run with synthetic sample dataset (Offline/Fast Test):**
+  ```bash
+  python run_stage5.py --use-sample
+  ```
+- **Custom hyperparameters:**
+  ```bash
+  python run_stage5.py --epochs 100 --lr 0.005 --hidden-dim 64 --triplet-weight 0.5
+  ```
 
 ---
 
@@ -207,9 +228,10 @@ python -m pytest tests/
 - [x] **Stage 2: Dynamic Graph Construction & PyTorch Geometric Integration** *(Completed)*
 - [x] **Stage 3: Baseline Models & Basic GCN Model Implementation** *(Completed)*
 - [x] **Stage 4: Strictly Causal Dynamic Temporal GNN (Recurrent GCN) & Benchmarking** *(Completed)*
-- [ ] **Stage 5: Transformer & Triplet/Contrastive Learning Architecture**
+- [x] **Stage 5: Triplet-Style Dynamic GNN with Transformer Encoder** *(Completed)*
 - [ ] **Stage 6: REST API Backend (FastAPI / Flask)**
 - [ ] **Stage 7: Interactive Web Dashboard Frontend**
+
 
 
 

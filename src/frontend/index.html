@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Scam Detection Dashboard | Dynamic GNN & Transformer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --sidebar-bg: #0f172a;
+            --card-bg: rgba(22, 30, 46, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-cyan: #00f2fe;
+            --accent-blue: #3b82f6;
+            --illicit-red: #ff1744;
+            --licit-green: #00e676;
+            --warning-amber: #f59e0b;
+            --glass-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 23, 68, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* App Container Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 24px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: #050b14;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+        }
+
+        .brand-text h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00f2fe 0%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            background: transparent;
+            text-align: left;
+            width: 100%;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+            border-color: rgba(0, 242, 254, 0.4);
+            color: var(--accent-cyan);
+            box-shadow: 0 4px 16px rgba(0, 242, 254, 0.15);
+        }
+
+        .sidebar-footer {
+            padding-top: 16px;
+            border-top: 1px solid var(--card-border);
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Main Content Area */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow-y: auto;
+        }
+
+        /* Header Bar */
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 32px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .page-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 230, 118, 0.1);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--licit-green);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--licit-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--licit-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 230, 118, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+        }
+
+        .content-body {
+            padding: 28px 32px;
+            flex: 1;
+        }
+
+        /* Components & Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--glass-shadow);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .kpi-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .kpi-card.total .kpi-value { color: var(--accent-cyan); }
+        .kpi-card.illicit .kpi-value { color: var(--illicit-red); }
+        .kpi-card.licit .kpi-value { color: var(--licit-green); }
+        .kpi-card.risk .kpi-value { color: var(--warning-amber); }
+
+        .panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--glass-shadow);
+            margin-bottom: 24px;
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2col { grid-template-columns: 1fr; }
+            .sidebar { width: 210px; }
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(10, 15, 25, 0.6);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            color: #050b14;
+            font-weight: 700;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Risk Badge & Output Result */
+        .result-box {
+            text-align: center;
+            padding: 24px;
+            border-radius: 14px;
+            background: rgba(10, 15, 25, 0.5);
+            border: 1px solid var(--card-border);
+            margin-bottom: 20px;
+        }
+
+        .badge-prediction {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .badge-prediction.illicit {
+            background: rgba(255, 23, 68, 0.15);
+            color: var(--illicit-red);
+            border: 1px solid rgba(255, 23, 68, 0.4);
+        }
+
+        .badge-prediction.licit {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--licit-green);
+            border: 1px solid rgba(0, 230, 118, 0.4);
+        }
+
+        .risk-score-display {
+            font-family: 'Outfit', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+        }
+
+        .explanation-box {
+            background: rgba(0, 242, 254, 0.05);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-top: 16px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Dropzone */
+        .dropzone {
+            border: 2px dashed rgba(0, 242, 254, 0.4);
+            border-radius: 14px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(0, 242, 254, 0.02);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .dropzone:hover {
+            background: rgba(0, 242, 254, 0.06);
+            border-color: var(--accent-cyan);
+        }
+
+        /* Figures Grid */
+        .figure-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+        }
+
+        .figure-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .figure-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .figure-card .fig-caption {
+            padding: 16px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            border-top: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .figure-card .fig-subtext {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Fade Animation */
+        .view-anim {
+            animation: fadeIn 0.25s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const API_BASE = "";
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [stats, setStats] = useState({ total_transactions: 0, illicit_count: 0, licit_count: 0, avg_risk_score: 0 });
+            const [history, setHistory] = useState([]);
+            
+            // Single Inspection State
+            const [singleInput, setSingleInput] = useState({ tx_id: 23049581, time_step: 42, feat_1: 2.45, feat_2: 0.015, feat_95: 1.85 });
+            const [singleResult, setSingleResult] = useState(null);
+            const [singleLoading, setSingleLoading] = useState(false);
+
+            // Batch State
+            const [batchResults, setBatchResults] = useState([]);
+            const [batchLoading, setBatchLoading] = useState(false);
+
+            // Fetch Stats & History
+            const fetchStats = async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/api/dashboard/stats`);
+                    const data = await res.json();
+                    setStats(data);
+                } catch (err) {
+                    console.error("Error fetching stats:", err);
+                }
+            };
+
+            const fetchHistory = async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/api/history`);
+                    const data = await res.json();
+                    setHistory(data);
+                } catch (err) {
+                    console.error("Error fetching history:", err);
+                }
+            };
+
+            useEffect(() => {
+                fetchStats();
+            }, []);
+
+            useEffect(() => {
+                if (activeTab === 'history') fetchHistory();
+            }, [activeTab]);
+
+            // Single transaction analyze
+            const handleSingleAnalyze = async () => {
+                setSingleLoading(true);
+                try {
+                    const featureDict = { 
+                        "feat_1": parseFloat(singleInput.feat_1), 
+                        "feat_2": parseFloat(singleInput.feat_2), 
+                        "feat_95": parseFloat(singleInput.feat_95) 
+                    };
+                    const res = await fetch(`${API_BASE}/api/predict/single`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            tx_id: parseInt(singleInput.tx_id), 
+                            time_step: parseInt(singleInput.time_step), 
+                            feature_dict: featureDict 
+                        })
+                    });
+                    const data = await res.json();
+                    setSingleResult(data);
+                    fetchStats();
+                } catch (err) {
+                    alert("Analysis error: " + err);
+                } finally {
+                    setSingleLoading(false);
+                }
+            };
+
+            const generateRandomSample = () => {
+                setSingleInput({
+                    tx_id: Math.floor(10000000 + Math.random() * 90000000),
+                    time_step: Math.floor(40 + Math.random() * 9),
+                    feat_1: (Math.random() * 5.0).toFixed(2),
+                    feat_2: (Math.random() * 0.05).toFixed(3),
+                    feat_95: (Math.random() * 3.0).toFixed(2)
+                });
+            };
+
+            // Batch upload
+            const handleCSVUpload = async (file) => {
+                if (!file) return;
+                setBatchLoading(true);
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const res = await fetch(`${API_BASE}/api/predict/csv`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    setBatchResults(data.predictions || []);
+                    fetchStats();
+                } catch (err) {
+                    alert("CSV upload failed: " + err);
+                } finally {
+                    setBatchLoading(false);
+                }
+            };
+
+            const clearHistory = async () => {
+                await fetch(`${API_BASE}/api/history`, { method: 'DELETE' });
+                fetchHistory();
+                fetchStats();
+            };
+
+            const menuItems = [
+                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                { id: 'single', label: 'Single Transaction', icon: '🔍' },
+                { id: 'batch', label: 'Batch Upload', icon: '📁' },
+                { id: 'history', label: 'Prediction History', icon: '📜' },
+                { id: 'analytics', label: 'Analytics / Graphs', icon: '📈' },
+                { id: 'eda', label: 'EDA', icon: '🔬' }
+            ];
+
+            return (
+                <div className="app-container">
+                    {/* Sidebar */}
+                    <aside className="sidebar">
+                        <div className="brand-header">
+                            <div className="brand-icon">₿</div>
+                            <div className="brand-text">
+                                <h2>Bitcoin Scam Detector</h2>
+                                <p>Dynamic GNN + Transformer</p>
+                            </div>
+                        </div>
+
+                        <nav className="nav-menu">
+                            {menuItems.map(item => (
+                                <button 
+                                    key={item.id} 
+                                    className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
+                                    onClick={() => setActiveTab(item.id)}
+                                >
+                                    <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+
+                        <div className="sidebar-footer">
+                            Bitcoin Scam Detection GNN &copy; 2026<br/>Stage 6 Production App
+                        </div>
+                    </aside>
+
+                    {/* Main Content Area */}
+                    <div className="main-wrapper">
+                        {/* Top Navbar */}
+                        <header className="top-navbar">
+                            <div className="page-title">
+                                {menuItems.find(m => m.id === activeTab)?.label}
+                            </div>
+                            <div className="system-status">
+                                <div className="pulse-dot"></div>
+                                <span>Stage 5 Model Active</span>
+                            </div>
+                        </header>
+
+                        {/* Content Views */}
+                        <div className="content-body">
+                            {activeTab === 'dashboard' && (
+                                <div className="view-anim">
+                                    <div className="kpi-grid">
+                                        <div className="kpi-card total">
+                                            <div className="kpi-label">Total Analyzed</div>
+                                            <div className="kpi-value">{stats.total_transactions}</div>
+                                        </div>
+                                        <div className="kpi-card illicit">
+                                            <div className="kpi-label">Flagged Illicit Scams</div>
+                                            <div className="kpi-value">{stats.illicit_count}</div>
+                                        </div>
+                                        <div className="kpi-card licit">
+                                            <div className="kpi-label">Legitimate Licit</div>
+                                            <div className="kpi-value">{stats.licit_count}</div>
+                                        </div>
+                                        <div className="kpi-card risk">
+                                            <div className="kpi-label">Mean Scam Risk %</div>
+                                            <div className="kpi-value">{stats.avg_risk_score}%</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid-2col">
+                                        <div className="panel-card">
+                                            <div className="panel-title">Model Overview & Architecture</div>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
+                                                Deployed with Stage 5 <strong>Triplet-Style Dynamic Graph Network with Transformer Encoder</strong> trained on 49 discrete temporal graph snapshots of the Elliptic Bitcoin dataset.
+                                            </p>
+                                            <div style={{ display: 'flex', gap: '12px' }}>
+                                                <button className="btn-primary" onClick={() => setActiveTab('single')}>Inspect Transaction</button>
+                                                <button className="btn-secondary" onClick={() => setActiveTab('batch')}>Upload CSV Batch</button>
+                                            </div>
+                                        </div>
+
+                                        <div className="panel-card">
+                                            <div className="panel-title">Model Benchmark Snapshot</div>
+                                            <img src="/api/figures/stage5_metrics_comparison.png" alt="Metrics Comparison" style={{ width: '100%', borderRadius: '10px' }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'single' && (
+                                <div className="view-anim">
+                                    <div className="grid-2col">
+                                        <div className="panel-card">
+                                            <div className="panel-title">
+                                                <span>Transaction Parameters</span>
+                                                <button className="btn-secondary" onClick={generateRandomSample}>Random Sample</button>
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Transaction ID (txId)</label>
+                                                <input type="number" className="form-control" value={singleInput.tx_id} onChange={e => setSingleInput({...singleInput, tx_id: e.target.value})} />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Timestep (1 - 49)</label>
+                                                <input type="number" className="form-control" min="1" max="49" value={singleInput.time_step} onChange={e => setSingleInput({...singleInput, time_step: e.target.value})} />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Transaction Output Amount (feat_1)</label>
+                                                <input type="number" step="0.01" className="form-control" value={singleInput.feat_1} onChange={e => setSingleInput({...singleInput, feat_1: e.target.value})} />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Fee Ratio (feat_2)</label>
+                                                <input type="number" step="0.001" className="form-control" value={singleInput.feat_2} onChange={e => setSingleInput({...singleInput, feat_2: e.target.value})} />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>1-Hop Aggregated Neighbor Activity (feat_95)</label>
+                                                <input type="number" step="0.05" className="form-control" value={singleInput.feat_95} onChange={e => setSingleInput({...singleInput, feat_95: e.target.value})} />
+                                            </div>
+
+                                            <button className="btn-primary" onClick={handleSingleAnalyze} disabled={singleLoading}>
+                                                {singleLoading ? 'Running Model Inference...' : 'Analyze Scam Risk'}
+                                            </button>
+                                        </div>
+
+                                        <div className="panel-card">
+                                            <div className="panel-title">Risk Assessment & Explanation</div>
+
+                                            {singleResult ? (
+                                                <div>
+                                                    <div className="result-box">
+                                                        <div className={`badge-prediction ${singleResult.is_illicit ? 'illicit' : 'licit'}`}>
+                                                            {singleResult.prediction.toUpperCase()}
+                                                        </div>
+                                                        <div className="risk-score-display" style={{ color: singleResult.risk_color }}>
+                                                            {singleResult.risk_score_pct}%
+                                                        </div>
+                                                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                                            Risk Level: {singleResult.risk_level}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="panel-title" style={{ fontSize: '15px', marginBottom: '10px' }}>Top Suspicious Indicators</div>
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Rank</th>
+                                                                <th>Indicator</th>
+                                                                <th>Raw Value</th>
+                                                                <th>Z-Score Impact</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {singleResult.top_indicators.map(ind => (
+                                                                <tr key={ind.rank}>
+                                                                    <td><strong>#{ind.rank}</strong></td>
+                                                                    <td>{ind.feature_name}</td>
+                                                                    <td>{ind.raw_value}</td>
+                                                                    <td>
+                                                                        <span style={{ color: ind.scaled_z_score > 0 ? 'var(--illicit-red)' : 'var(--licit-green)' }}>
+                                                                            {ind.scaled_z_score > 0 ? '+' : ''}{ind.scaled_z_score} σ
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+
+                                                    <div className="explanation-box">
+                                                        {singleResult.explanation_summary}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                                                    Fill in details and click "Analyze Scam Risk" to generate inference & explanations.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'batch' && (
+                                <div className="view-anim">
+                                    <div className="panel-card">
+                                        <div className="panel-title">Batch Transaction CSV Scanner</div>
+                                        <div className="dropzone" onClick={() => document.getElementById('csvInput').click()}>
+                                            <div style={{ fontSize: '36px', marginBottom: '10px' }}>📄</div>
+                                            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px' }}>
+                                                {batchLoading ? 'Scanning batch file...' : 'Drop your transaction CSV file here or click to browse'}
+                                            </div>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                                Supports Elliptic format CSVs (txId, time_step, feat_1...feat_166)
+                                            </div>
+                                            <input type="file" id="csvInput" style={{ display: 'none' }} accept=".csv" onChange={e => handleCSVUpload(e.target.files[0])} />
+                                        </div>
+
+                                        {batchResults.length > 0 && (
+                                            <div>
+                                                <div className="panel-title" style={{ fontSize: '16px' }}>Batch Scan Results ({batchResults.length} Transactions)</div>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Transaction ID</th>
+                                                            <th>Timestep</th>
+                                                            <th>Classification</th>
+                                                            <th>Scam Risk %</th>
+                                                            <th>Risk Tier</th>
+                                                            <th>Top Risk Driver</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {batchResults.map(p => (
+                                                            <tr key={p.tx_id}>
+                                                                <td>{p.tx_id}</td>
+                                                                <td>{p.time_step}</td>
+                                                                <td><strong style={{ color: p.is_illicit ? 'var(--illicit-red)' : 'var(--licit-green)' }}>{p.prediction}</strong></td>
+                                                                <td>{p.risk_score_pct}%</td>
+                                                                <td><span style={{ color: p.risk_color }}>{p.risk_level}</span></td>
+                                                                <td>{p.top_indicator}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'history' && (
+                                <div className="view-anim">
+                                    <div className="panel-card">
+                                        <div className="panel-title">
+                                            <span>Session Prediction Audit Log</span>
+                                            <button className="btn-secondary" onClick={clearHistory}>Clear History</button>
+                                        </div>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Tx ID</th>
+                                                    <th>Timestep</th>
+                                                    <th>Result</th>
+                                                    <th>Risk Score %</th>
+                                                    <th>Level</th>
+                                                    <th>Model Version</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {history.length === 0 ? (
+                                                    <tr><td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No predictions performed in this session.</td></tr>
+                                                ) : (
+                                                    history.map((h, i) => (
+                                                        <tr key={i}>
+                                                            <td>{h.tx_id}</td>
+                                                            <td>{h.time_step}</td>
+                                                            <td><strong style={{ color: h.is_illicit ? 'var(--illicit-red)' : 'var(--licit-green)' }}>{h.prediction}</strong></td>
+                                                            <td>{h.risk_score_pct}%</td>
+                                                            <td>{h.risk_level}</td>
+                                                            <td>{h.model_used || 'Stage 5 GNN'}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'analytics' && (
+                                <div className="view-anim">
+                                    <div className="figure-grid">
+                                        <div className="figure-card">
+                                            <img src="/api/figures/stage5_roc_curves.png" alt="ROC Curves" />
+                                            <div className="fig-caption">
+                                                Stage 5 Multi-Model ROC Curves
+                                                <div className="fig-subtext">True Positive Rate vs False Positive Rate evaluation</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/stage5_pr_curves.png" alt="PR Curves" />
+                                            <div className="fig-caption">
+                                                Precision-Recall Benchmark
+                                                <div className="fig-subtext">Performance under severe 1:10 class imbalance</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/stage5_confusion_matrices.png" alt="Confusion Matrices" />
+                                            <div className="fig-caption">
+                                                Confusion Matrices
+                                                <div className="fig-subtext">True Positives, False Positives, False Negatives</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/stage5_metrics_comparison.png" alt="Metrics Comparison" />
+                                            <div className="fig-caption">
+                                                Multi-Stage Metrics Benchmarking
+                                                <div className="fig-subtext">Accuracy, Precision, Recall, F1, Macro-F1, ROC-AUC</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/stage5_training_loss.png" alt="Training & Triplet Loss" />
+                                            <div className="fig-caption">
+                                                Triplet & Cross-Entropy Loss Curve
+                                                <div className="fig-subtext">Stage 5 contrastive learning convergence over epochs</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'eda' && (
+                                <div className="view-anim">
+                                    <div className="figure-grid">
+                                        <div className="figure-card">
+                                            <img src="/api/figures/class_distribution.png" alt="Class Distribution" />
+                                            <div className="fig-caption">
+                                                Elliptic Class Imbalance Distribution
+                                                <div className="fig-subtext">Illicit vs Licit transaction proportions</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/unknown_vs_labelled.png" alt="Unknown vs Labelled" />
+                                            <div className="fig-caption">
+                                                Labelled vs Unknown Transaction Ratio
+                                                <div className="fig-subtext">Proportion of ground truth labels in dataset</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/timestep_distribution.png" alt="Timestep Distribution" />
+                                            <div className="fig-caption">
+                                                Transactions Per Timestep (1-49)
+                                                <div className="fig-subtext">Temporal snapshot node density</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/illicit_ratio_over_time.png" alt="Illicit Ratio Over Time" />
+                                            <div className="fig-caption">
+                                                Illicit Scam Ratio Dynamics
+                                                <div className="fig-subtext">Temporal trend of scam transactions over timesteps</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/node_degree_distribution.png" alt="Node Degree Distribution" />
+                                            <div className="fig-caption">
+                                                Graph Structural Degree Distribution
+                                                <div className="fig-subtext">Transaction in-degree and out-degree connectivity</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/feature_correlation_sample.png" alt="Feature Correlation" />
+                                            <div className="fig-caption">
+                                                Feature Correlation Heatmap
+                                                <div className="fig-subtext">Pairwise linear correlation of transaction features</div>
+                                            </div>
+                                        </div>
+                                        <div className="figure-card">
+                                            <img src="/api/figures/subgraph_sample.png" alt="Subgraph Visualization" />
+                                            <div className="fig-caption">
+                                                Elliptic Graph Topology Subgraph
+                                                <div className="fig-subtext">Local graph connectivity of Bitcoin transaction nodes</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

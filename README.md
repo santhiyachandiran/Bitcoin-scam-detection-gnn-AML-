@@ -71,27 +71,35 @@ project/
 │   │   ├── preprocessor.py  # Feature cleaning, leak-free normalization & split masks
 │   │   ├── builder.py       # PyTorch Geometric Data construction & topology stats
 │   │   └── saver.py         # PyG graph serialization & I/O utilities
-│   ├── models/              # ML Baselines, Static GCN & Causal Recurrent GCN (Stage 3 & 4)
+│   ├── models/              # ML Baselines, Static GCN, Dynamic GCN & Triplet Transformer (Stage 3–5)
 │   │   ├── __init__.py
 │   │   ├── baselines.py     # Logistic Regression & Random Forest classifiers
 │   │   ├── gcn.py           # PyG GCN model architecture & weighted loss trainer
-│   │   └── temporal_gcn.py  # Causal Recurrent GCN (GCN + GRU node memory)
-│   ├── evaluation/          # Metrics & Benchmarks (Stage 3 & 4)
+│   │   ├── temporal_gcn.py  # Causal Recurrent GCN (GCN + GRU node memory)
+│   │   └── triplet_transformer_gcn.py # Triplet Transformer Dynamic GNN
+│   ├── evaluation/          # Metrics & Benchmarks (Stage 3–5)
 │   │   ├── __init__.py
 │   │   ├── metrics.py       # Accuracy, Precision, Recall, F1, Macro-F1, ROC-AUC, CM
 │   │   └── visualizer.py    # ROC, PR, Confusion Matrix, loss curves & bar plots
-│   ├── backend/             # REST API Backend (Stage 5)
-│   └── frontend/            # Web UI Frontend (Stage 6)
+│   ├── backend/             # FastAPI REST API & XAI Engine (Stage 6)
+│   │   ├── main.py          # REST API server & static asset mount
+│   │   ├── inference.py     # Model inference engine loading Stage 2 scaler & Stage 5 model
+│   │   └── explainability.py# XAI Z-score contributor engine & natural language explanations
+│   └── frontend/            # React Single Page Application (Stage 6)
+│       └── index.html       # Responsive Dark Mode Dashboard with Lucide icons
 ├── tests/
 │   ├── __init__.py
 │   ├── test_loader.py       # Stage 1 unit tests
 │   ├── test_stage2.py       # Stage 2 unit tests
 │   ├── test_stage3.py       # Stage 3 unit tests
-│   └── test_stage4.py       # Stage 4 temporal causality & model unit tests
+│   ├── test_stage4.py       # Stage 4 temporal causality unit tests
+│   ├── test_stage5.py       # Stage 5 Triplet Transformer GNN unit tests
+│   └── test_stage6.py       # Stage 6 API, inference, and explainability unit tests
 ├── run_eda.py               # Main CLI script for EDA pipeline
 ├── run_stage2.py            # Main CLI script for Stage 2 pipeline
 ├── run_stage3.py            # Main CLI script for Stage 3 baseline & GCN pipeline
 ├── run_stage4.py            # Main CLI script for Stage 4 dynamic temporal GNN pipeline
+├── run_stage5.py            # Main CLI script for Stage 5 Triplet Transformer GNN pipeline
 ├── requirements.txt         # Required Python dependencies
 └── README.md                # Project documentation
 ```
@@ -160,26 +168,6 @@ To train and evaluate the **Strictly Causal Recurrent GCN** across 49 discrete t
 python run_stage4.py
 ```
 
-### Options:
-- **Run with synthetic sample dataset (Offline/Fast Test):**
-  ```bash
-  python run_stage4.py --use-sample
-  ```
-- **Custom hyperparameters:**
-  ```bash
-  python run_stage4.py --epochs 100 --lr 0.01 --hidden-dim 64 --dropout 0.2
-  ```
-
-### Evaluated Benchmark Results (Test Set: Timesteps 40–49):
-
-| Model | Accuracy | Precision (Illicit) | Recall (Illicit) | F1-Score (Illicit) | Macro-F1 | ROC-AUC |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Logistic Regression** | 0.7398 | 0.1559 | **0.8097** | 0.2614 | 0.5518 | 0.8549 |
-| **Random Forest** | **0.9702** | **0.8359** | 0.5928 | **0.6937** | **0.8390** | **0.8858** |
-| **Static GCN (Transductive)** | 0.8557 | 0.1889 | 0.4670 | 0.2690 | 0.5945 | 0.7767 |
-| **Recurrent GCN (Dynamic)** | 0.9193 | 0.3321 | 0.4135 | **0.3683** | **0.6626** | 0.8136 |
-| **Triplet Transformer GNN** | **0.8902** | 0.2691 | **0.5425** | 0.3597 | 0.6499 | **0.8312** |
-
 ---
 
 ## ⚡ Running Triplet-Style Dynamic GNN with Transformer Encoder (Stage 5)
@@ -190,15 +178,38 @@ To train and evaluate the **Triplet-Style Dynamic Graph Network with Transformer
 python run_stage5.py
 ```
 
-### Options:
-- **Run with synthetic sample dataset (Offline/Fast Test):**
-  ```bash
-  python run_stage5.py --use-sample
-  ```
-- **Custom hyperparameters:**
-  ```bash
-  python run_stage5.py --epochs 100 --lr 0.005 --hidden-dim 64 --triplet-weight 0.5
-  ```
+### Evaluated Benchmark Results Across All Models (Test Set: Timesteps 40–49):
+
+| Model | Accuracy | Precision (Illicit) | Recall (Illicit) | F1-Score (Illicit) | Macro-F1 | ROC-AUC |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Logistic Regression** | 0.7398 | 0.1559 | **0.8097** | 0.2614 | 0.5518 | 0.8549 |
+| **Random Forest** | **0.9702** | **0.8359** | 0.5928 | **0.6937** | **0.8390** | **0.8858** |
+| **Static GCN (Transductive)** | 0.8557 | 0.1889 | 0.4670 | 0.2690 | 0.5945 | 0.7767 |
+| **Recurrent GCN (Dynamic)** | 0.9193 | 0.3321 | 0.4135 | 0.3683 | 0.6626 | 0.8136 |
+| **Triplet Transformer GNN** | 0.8902 | 0.2691 | 0.5425 | **0.3597** | **0.6499** | **0.8312** |
+
+---
+
+## 🖥️ Running the Stage 6 Web Application & Explainability Engine
+
+Stage 6 provides an interactive React single-page application and FastAPI backend to deploy the trained Stage 5 Triplet Transformer model for real-time inference and Explainable AI (XAI) risk diagnosis.
+
+### 1. Launch Server
+```bash
+python -m uvicorn src.backend.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+### 2. Access UI
+Open your web browser and navigate to:
+`http://127.0.0.1:8000`
+
+### 3. Features Included
+- **Single Transaction Inspector**: Enter custom transaction parameters or test features to receive real-time risk predictions, confidence scores, and natural language explanations.
+- **Batch CSV Upload**: Upload custom Bitcoin transaction CSV batches for bulk inference.
+- **Explainability Drawer**: Displays feature Z-score deviations and top contributing risk factors.
+- **Monitoring Dashboard**: Live KPIs (Total, Illicit, Licit, High Risk count, Mean Risk Score).
+- **Session History Log**: In-memory prediction session tracking with CSV download option.
+- **Pipeline Figure Gallery**: Browse high-resolution EDA and model benchmark visual plots.
 
 ---
 
@@ -214,7 +225,7 @@ jupyter notebook notebooks/01_exploratory_data_analysis.ipynb
 
 ## 🧪 Running Unit Tests
 
-To verify dataset loading, preprocessors, graph builders, baseline models, static/dynamic GCN trainers, causality tests, and visualization engines:
+To verify dataset loading, preprocessors, graph builders, baseline models, static/dynamic GCN trainers, causality tests, model inference, explainability engines, and API endpoints:
 
 ```bash
 python -m pytest tests/
@@ -229,8 +240,8 @@ python -m pytest tests/
 - [x] **Stage 3: Baseline Models & Basic GCN Model Implementation** *(Completed)*
 - [x] **Stage 4: Strictly Causal Dynamic Temporal GNN (Recurrent GCN) & Benchmarking** *(Completed)*
 - [x] **Stage 5: Triplet-Style Dynamic GNN with Transformer Encoder** *(Completed)*
-- [ ] **Stage 6: REST API Backend (FastAPI / Flask)**
-- [ ] **Stage 7: Interactive Web Dashboard Frontend**
+- [x] **Stage 6: REST API Backend (FastAPI), React Single-Page App, Explainable AI & Monitoring Dashboard** *(Completed)*
+
 
 
 

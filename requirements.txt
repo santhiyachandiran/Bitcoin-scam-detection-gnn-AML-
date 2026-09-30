@@ -8,3 +8,4 @@ torch>=2.0.0
 kagglehub>=0.2.0
 jupyter>=1.0.0
 pytest>=7.0.0
+torch-geometric>=2.3.0

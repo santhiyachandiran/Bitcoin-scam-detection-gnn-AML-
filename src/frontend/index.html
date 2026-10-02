@@ -1,995 +1,1403 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitcoin Scam Detection Dashboard | Dynamic GNN & Transformer</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <!-- React & Babel CDNs -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        :root {
-            --bg-dark: #090d16;
-            --sidebar-bg: #0f172a;
-            --card-bg: rgba(22, 30, 46, 0.75);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-cyan: #00f2fe;
-            --accent-blue: #3b82f6;
-            --illicit-red: #ff1744;
-            --licit-green: #00e676;
-            --warning-amber: #f59e0b;
-            --glass-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitcoin Fraud & Risk Intelligence Platform</title>
+  <meta name="description" content="Real-Time Bitcoin Scam & Anti-Money Laundering Detection using Dynamic Graph Neural Networks and Local Feature Explainability on the Elliptic Dataset.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Cytoscape.js CDN for interactive graph visualization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-sidebar: #ffffff;
+      --primary-burgundy: #7a0c2e;
+      --primary-burgundy-hover: #5d0721;
+      --accent-red: #dc2626;
+      --accent-red-light: #fee2e2;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --border-color: #e2e8f0;
+      --border-focus: #7a0c2e;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 25px rgba(122,12,46,0.08);
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+      --color-critical: #dc2626;
+      --bg-critical: #fef2f2;
+      --border-critical: #fca5a5;
+      
+      --color-high: #ea580c;
+      --bg-high: #fff7ed;
+      --border-high: #ffddb3;
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(255, 23, 68, 0.05) 0%, transparent 40%);
-            background-attachment: fixed;
-        }
+      --color-moderate: #d97706;
+      --bg-moderate: #fffbeb;
+      --border-moderate: #fde68a;
 
-        /* App Container Layout */
-        .app-container {
-            display: flex;
-            min-height: 100vh;
-        }
+      --color-low: #16a34a;
+      --bg-low: #f0fdf4;
+      --border-low: #bbf7d0;
+    }
 
-        /* Sidebar Styling */
-        .sidebar {
-            width: 260px;
-            background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--card-border);
-            display: flex;
-            flex-direction: column;
-            padding: 24px 16px;
-            flex-shrink: 0;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            z-index: 100;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        .brand-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--card-border);
-            margin-bottom: 24px;
-        }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-        .brand-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 20px;
-            color: #050b14;
-            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
-        }
+    h1, h2, h3, h4, h5 {
+      font-family: 'Outfit', 'Inter', sans-serif;
+      font-weight: 700;
+      color: var(--text-main);
+    }
 
-        .brand-text h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #00f2fe 0%, #ffffff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
-        }
+    /* --- Header & Navigation --- */
+    .app-header {
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
 
-        .brand-text p {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-        .nav-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1;
-        }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--primary-burgundy);
+    }
 
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 12px;
-            color: var(--text-muted);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-            background: transparent;
-            text-align: left;
-            width: 100%;
-        }
+    .brand-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary-burgundy), var(--accent-red));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 1.25rem;
+      font-weight: 800;
+      box-shadow: 0 4px 10px rgba(122,12,46,0.2);
+    }
 
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-main);
-        }
+    .brand-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--primary-burgundy);
+    }
 
-        .nav-item.active {
-            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
-            border-color: rgba(0, 242, 254, 0.4);
-            color: var(--accent-cyan);
-            box-shadow: 0 4px 16px rgba(0, 242, 254, 0.15);
-        }
+    .brand-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
 
-        .sidebar-footer {
-            padding-top: 16px;
-            border-top: 1px solid var(--card-border);
-            font-size: 11px;
-            color: var(--text-muted);
-            text-align: center;
-        }
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background-color: #f1f5f9;
+      padding: 0.25rem;
+      border-radius: var(--radius-md);
+    }
 
-        /* Main Content Area */
-        .main-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            overflow-y: auto;
-        }
+    .nav-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
 
-        /* Header Bar */
-        .top-navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 18px 32px;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--card-border);
-            position: sticky;
-            top: 0;
-            z-index: 90;
-        }
+    .nav-btn:hover {
+      color: var(--primary-burgundy);
+      background-color: rgba(255,255,255,0.6);
+    }
 
-        .page-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
+    .nav-btn.active {
+      background-color: #ffffff;
+      color: var(--primary-burgundy);
+      box-shadow: var(--shadow-sm);
+    }
 
-        .system-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(0, 230, 118, 0.1);
-            border: 1px solid rgba(0, 230, 118, 0.3);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--licit-green);
-        }
+    .system-status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #166534;
+    }
 
-        .pulse-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--licit-green);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--licit-green);
-            animation: pulse 2s infinite;
-        }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+    }
 
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 230, 118, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
-        }
+    /* --- Main Layout & View Containers --- */
+    .app-main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
 
-        .content-body {
-            padding: 28px 32px;
-            flex: 1;
-        }
+    .view-page {
+      display: none;
+    }
 
-        /* Components & Cards */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
+    .view-page.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
 
-        .kpi-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 20px;
-            backdrop-filter: blur(12px);
-            box-shadow: var(--glass-shadow);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(0, 242, 254, 0.3);
-        }
+    /* --- UI Cards & Grid --- */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s ease;
+    }
 
-        .kpi-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
 
-        .kpi-value {
-            font-family: 'Outfit', sans-serif;
-            font-size: 32px;
-            font-weight: 700;
-            margin-top: 8px;
-        }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-        .kpi-card.total .kpi-value { color: var(--accent-cyan); }
-        .kpi-card.illicit .kpi-value { color: var(--illicit-red); }
-        .kpi-card.licit .kpi-value { color: var(--licit-green); }
-        .kpi-card.risk .kpi-value { color: var(--warning-amber); }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary-burgundy);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
-        .panel-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 24px;
-            backdrop-filter: blur(12px);
-            box-shadow: var(--glass-shadow);
-            margin-bottom: 24px;
-        }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
 
-        .panel-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
 
-        .grid-2col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+    }
 
-        @media (max-width: 1024px) {
-            .grid-2col { grid-template-columns: 1fr; }
-            .sidebar { width: 210px; }
-        }
+    /* --- Buttons & Inputs --- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
 
-        /* Form styling */
-        .form-group {
-            margin-bottom: 16px;
-        }
+    .btn-primary {
+      background-color: var(--primary-burgundy);
+      color: #ffffff;
+    }
 
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
+    .btn-primary:hover {
+      background-color: var(--primary-burgundy-hover);
+      box-shadow: 0 4px 12px rgba(122,12,46,0.25);
+    }
 
-        .form-control {
-            width: 100%;
-            background: rgba(10, 15, 25, 0.6);
-            border: 1px solid var(--card-border);
-            color: var(--text-main);
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s ease;
-        }
+    .btn-secondary {
+      background-color: #ffffff;
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
 
-        .form-control:focus {
-            border-color: var(--accent-cyan);
-        }
+    .btn-secondary:hover {
+      background-color: #f8fafc;
+      border-color: var(--primary-burgundy);
+      color: var(--primary-burgundy);
+    }
 
-        .btn-primary {
-            width: 100%;
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            color: #050b14;
-            font-weight: 700;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            font-size: 15px;
-            cursor: pointer;
-            transition: opacity 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
-        }
+    .btn-danger {
+      background-color: #fef2f2;
+      border-color: #fca5a5;
+      color: #dc2626;
+    }
 
-        .btn-primary:hover {
-            opacity: 0.95;
-            transform: translateY(-1px);
-        }
+    .btn-danger:hover {
+      background-color: #fee2e2;
+    }
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--card-border);
-            color: var(--text-main);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8rem;
+    }
 
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
+    .form-group {
+      margin-bottom: 1rem;
+    }
 
-        /* Risk Badge & Output Result */
-        .result-box {
-            text-align: center;
-            padding: 24px;
-            border-radius: 14px;
-            background: rgba(10, 15, 25, 0.5);
-            border: 1px solid var(--card-border);
-            margin-bottom: 20px;
-        }
+    .form-label {
+      display: block;
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.35rem;
+    }
 
-        .badge-prediction {
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-        }
+    .form-control, .form-select {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.875rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background-color: #ffffff;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
 
-        .badge-prediction.illicit {
-            background: rgba(255, 23, 68, 0.15);
-            color: var(--illicit-red);
-            border: 1px solid rgba(255, 23, 68, 0.4);
-        }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-burgundy);
+      box-shadow: 0 0 0 3px rgba(122,12,46,0.1);
+    }
 
-        .badge-prediction.licit {
-            background: rgba(0, 230, 118, 0.15);
-            color: var(--licit-green);
-            border: 1px solid rgba(0, 230, 118, 0.4);
-        }
+    /* --- Home View --- */
+    .hero-banner {
+      background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+      border: 1px solid #fecdd3;
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
 
-        .risk-score-display {
-            font-family: 'Outfit', sans-serif;
-            font-size: 42px;
-            font-weight: 800;
-        }
+    .hero-title {
+      font-size: 2.2rem;
+      color: var(--primary-burgundy);
+      margin-bottom: 0.75rem;
+      line-height: 1.2;
+    }
 
-        .explanation-box {
-            background: rgba(0, 242, 254, 0.05);
-            border-left: 4px solid var(--accent-cyan);
-            padding: 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #cbd5e1;
-            margin-top: 16px;
-        }
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      margin-bottom: 1.5rem;
+    }
 
-        /* Tables */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
+    .feature-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background-color: #fff1f2;
+      color: var(--primary-burgundy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
 
-        th {
-            text-align: left;
-            padding: 12px 14px;
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-muted);
-            font-weight: 600;
-            border-bottom: 1px solid var(--card-border);
-        }
+    /* --- Analysis View --- */
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
 
-        td {
-            padding: 12px 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }
+    .risk-badge.critical {
+      background-color: var(--bg-critical);
+      color: var(--color-critical);
+      border: 1px solid var(--border-critical);
+    }
 
-        tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
-        }
+    .risk-badge.high {
+      background-color: var(--bg-high);
+      color: var(--color-high);
+      border: 1px solid var(--border-high);
+    }
 
-        /* Dropzone */
-        .dropzone {
-            border: 2px dashed rgba(0, 242, 254, 0.4);
-            border-radius: 14px;
-            padding: 40px;
-            text-align: center;
-            background: rgba(0, 242, 254, 0.02);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 20px;
-        }
+    .risk-badge.moderate {
+      background-color: var(--bg-moderate);
+      color: var(--color-moderate);
+      border: 1px solid var(--border-moderate);
+    }
 
-        .dropzone:hover {
-            background: rgba(0, 242, 254, 0.06);
-            border-color: var(--accent-cyan);
-        }
+    .risk-badge.low {
+      background-color: var(--bg-low);
+      color: var(--color-low);
+      border: 1px solid var(--border-low);
+    }
 
-        /* Figures Grid */
-        .figure-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 24px;
-        }
+    .risk-meter {
+      height: 14px;
+      background-color: #e2e8f0;
+      border-radius: 7px;
+      overflow: hidden;
+      margin: 1rem 0;
+      position: relative;
+    }
 
-        .figure-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            overflow: hidden;
-            backdrop-filter: blur(12px);
-            box-shadow: var(--glass-shadow);
-        }
+    .risk-meter-fill {
+      height: 100%;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 7px;
+    }
 
-        .figure-card img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+    .indicator-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
 
-        .figure-card .fig-caption {
-            padding: 16px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-main);
-            border-top: 1px solid var(--card-border);
-            background: rgba(15, 23, 42, 0.6);
-        }
+    .indicator-table th, .indicator-table td {
+      padding: 0.75rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-        .figure-card .fig-subtext {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
+    .indicator-table th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.725rem;
+      letter-spacing: 0.05em;
+    }
 
-        /* Fade Animation */
-        .view-anim {
-            animation: fadeIn 0.25s ease-in-out;
-        }
+    /* --- Graph Page --- */
+    .graph-viewport {
+      width: 100%;
+      height: 580px;
+      background-color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+    #cytoscape-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    .graph-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background-color: #ffffff;
+      padding: 0.85rem 1.25rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+    }
+
+    .node-details-drawer {
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+      bottom: 1rem;
+      width: 320px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 1.25rem;
+      z-index: 10;
+      overflow-y: auto;
+      display: none;
+    }
+
+    /* --- Metrics Box & Tables --- */
+    .metric-card {
+      background-color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+    }
+
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary-burgundy);
+      margin-top: 0.25rem;
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .explanation-box {
+      background-color: #fff5f5;
+      border-left: 4px solid var(--primary-burgundy);
+      padding: 1rem 1.25rem;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      font-size: 0.9rem;
+      color: #4a0715;
+      line-height: 1.6;
+    }
+
+    /* Custom range input slider styling */
+    input[type=range] {
+      accent-color: var(--primary-burgundy);
+    }
+
+    /* Empty state styling */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.6;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid #e2e8f0;
+      border-top: 3px solid var(--primary-burgundy);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 1024px) {
+      .grid-2, .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+      }
+      .nav-tabs {
+        overflow-x: auto;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <div id="root"></div>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="brand-logo" onclick="switchTab('home')">
+        <div class="brand-logo-icon">₿</div>
+        <div>
+          <div class="brand-title">Bitcoin Risk Intelligence</div>
+          <div class="brand-subtitle">Dynamic GNN Fraud & Scam Detector</div>
+        </div>
+      </a>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-btn active" id="tab-home" onclick="switchTab('home')">🏠 Home</button>
+        <button class="nav-btn" id="tab-analysis" onclick="switchTab('analysis')">🔍 Transaction Analysis</button>
+        <button class="nav-btn" id="tab-graph" onclick="switchTab('graph')">🕸️ Transaction Graph</button>
+        <button class="nav-btn" id="tab-monitoring" onclick="switchTab('monitoring')">⚡ Risk Monitoring</button>
+        <button class="nav-btn" id="tab-analytics" onclick="switchTab('analytics')">📊 Analytics</button>
+        <button class="nav-btn" id="tab-about" onclick="switchTab('about')">ℹ️ About</button>
+      </nav>
 
-        const API_BASE = "";
+      <div class="system-status-pill">
+        <div class="status-dot"></div>
+        <span>Model & Dataset Ready</span>
+      </div>
+    </div>
+  </header>
 
-        function App() {
-            const [activeTab, setActiveTab] = useState('dashboard');
-            const [stats, setStats] = useState({ total_transactions: 0, illicit_count: 0, licit_count: 0, avg_risk_score: 0 });
-            const [history, setHistory] = useState([]);
+  <!-- Main View Container -->
+  <main class="app-main">
+
+    <!-- PAGE 1: HOME -->
+    <section id="view-home" class="view-page active">
+      <div class="hero-banner">
+        <h1 class="hero-title">Bitcoin Fraud & Scam Risk Intelligence</h1>
+        <p class="hero-subtitle">
+          Real-time transaction risk scoring, interactive neighborhood graph topological exploration, and explainable feature indicators powered by Dynamic Graph Neural Networks on the Elliptic Bitcoin dataset.
+        </p>
+        <div style="display: flex; gap: 1rem;">
+          <button class="btn btn-primary" onclick="switchTab('analysis')">🔍 Start Transaction Analysis</button>
+          <button class="btn btn-secondary" onclick="switchTab('graph')">🕸️ Explore Network Graph</button>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom: 2rem;">
+        <div class="metric-card">
+          <div class="metric-label">Indexed Transactions</div>
+          <div class="metric-value">203,769</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Elliptic Dataset Nodes</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Transaction Edges</div>
+          <div class="metric-value">234,355</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Directed Payment Flows</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Temporal Sequence</div>
+          <div class="metric-value">49 Steps</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Time Snapshots Index</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Model Accuracy</div>
+          <div class="metric-value">98.2%</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Triplet Transformer GNN</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="feature-icon-box">🛡️</div>
+          <h3 style="margin-bottom: 0.5rem; color: var(--primary-burgundy);">Dynamic GNN Risk Scoring</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">
+            Evaluates transaction graph structural embeddings and temporal state shifts to identify illicit scam clusters with high precision.
+          </p>
+        </div>
+        <div class="card">
+          <div class="feature-icon-box">🕸️</div>
+          <h3 style="margin-bottom: 0.5rem; color: var(--primary-burgundy);">Interactive Subgraph Topology</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">
+            Visualizes 2-hop transaction flow graph networks, highlighting suspicious high-risk money-laundering node paths.
+          </p>
+        </div>
+        <div class="card">
+          <div class="feature-icon-box">💡</div>
+          <h3 style="margin-bottom: 0.5rem; color: var(--primary-burgundy);">Local Feature Explainability</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">
+            Translates complex feature vectors into human-understandable top risk indicators and Z-score deviation explanations.
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- PAGE 2: TRANSACTION ANALYSIS -->
+    <section id="view-analysis" class="view-page">
+      <div class="grid-2">
+        
+        <!-- Left Column: Input Simulator & Controls -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔍 Built-in Transaction Simulator</div>
+            <button class="btn btn-secondary btn-sm" onclick="triggerRandomTransaction()">🎲 Random Tx</button>
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Timestep Selection (1-49)</label>
+              <select id="sim-timestep-select" class="form-select" onchange="loadDatasetTransactionsForTimestep(this.value)">
+                <!-- JS will populate timesteps -->
+              </select>
+            </div>
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">Select Dataset Transaction</label>
+              <select id="sim-tx-select" class="form-select" onchange="onSelectDatasetTransaction(this.value)">
+                <option value="">-- Loading Dataset Transactions --</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="background-color: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-burgundy); margin-bottom: 0.75rem;">
+              ⚙️ Understandable Transaction Properties (Custom Controls)
+            </div>
             
-            // Single Inspection State
-            const [singleInput, setSingleInput] = useState({ tx_id: 23049581, time_step: 42, feat_1: 2.45, feat_2: 0.015, feat_95: 1.85 });
-            const [singleResult, setSingleResult] = useState(null);
-            const [singleLoading, setSingleLoading] = useState(false);
+            <div class="grid-2" id="understandable-props-container">
+              <!-- Dynamically populated key parameter inputs -->
+            </div>
+          </div>
 
-            // Batch State
-            const [batchResults, setBatchResults] = useState([]);
-            const [batchLoading, setBatchLoading] = useState(false);
+          <button id="btn-run-analysis" class="btn btn-primary" style="width: 100%;" onclick="runPredictionAnalysis()">
+            ⚡ Run Risk Analysis Prediction
+          </button>
+        </div>
 
-            // Fetch Stats & History
-            const fetchStats = async () => {
-                try {
-                    const res = await fetch(`${API_BASE}/api/dashboard/stats`);
-                    const data = await res.json();
-                    setStats(data);
-                } catch (err) {
-                    console.error("Error fetching stats:", err);
-                }
-            };
+        <!-- Right Column: Prediction Output -->
+        <div class="card" id="analysis-results-card">
+          <div id="results-empty-state" class="empty-state">
+            <div class="empty-state-icon">🔎</div>
+            <h3>No Transaction Selected</h3>
+            <p>Select a transaction from the Elliptic dataset or generate a random transaction to evaluate risk score.</p>
+          </div>
 
-            const fetchHistory = async () => {
-                try {
-                    const res = await fetch(`${API_BASE}/api/history`);
-                    const data = await res.json();
-                    setHistory(data);
-                } catch (err) {
-                    console.error("Error fetching history:", err);
-                }
-            };
+          <div id="results-loading-state" class="empty-state" style="display: none;">
+            <div class="spinner" style="margin-bottom: 1rem;"></div>
+            <h3>Evaluating Dynamic GNN Model...</h3>
+            <p>Processing spatial-temporal node embeddings and computing local explainability metrics.</p>
+          </div>
 
-            useEffect(() => {
-                fetchStats();
-            }, []);
+          <div id="results-content-state" style="display: none;">
+            <div class="card-header">
+              <div>
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Transaction ID</div>
+                <h2 id="res-tx-id" style="color: var(--primary-burgundy); font-size: 1.6rem;">#100001</h2>
+              </div>
+              <div id="res-risk-badge-container">
+                <span id="res-risk-badge" class="risk-badge critical">CRITICAL (SCAM)</span>
+              </div>
+            </div>
 
-            useEffect(() => {
-                if (activeTab === 'history') fetchHistory();
-            }, [activeTab]);
+            <div style="margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.35rem;">
+                <span>Scam Risk Score:</span>
+                <span id="res-risk-pct" style="color: var(--primary-burgundy);">94.5%</span>
+              </div>
+              <div class="risk-meter">
+                <div id="res-risk-meter-fill" class="risk-meter-fill" style="width: 94.5%; background-color: var(--color-critical);"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                <span>0% (Licit)</span>
+                <span>Timestep: <strong id="res-timestep">1</strong></span>
+                <span>Model: <strong id="res-model-used">Dynamic GNN</strong></span>
+                <span>100% (Illicit)</span>
+              </div>
+            </div>
 
-            // Single transaction analyze
-            const handleSingleAnalyze = async () => {
-                setSingleLoading(true);
-                try {
-                    const featureDict = { 
-                        "feat_1": parseFloat(singleInput.feat_1), 
-                        "feat_2": parseFloat(singleInput.feat_2), 
-                        "feat_95": parseFloat(singleInput.feat_95) 
-                    };
-                    const res = await fetch(`${API_BASE}/api/predict/single`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            tx_id: parseInt(singleInput.tx_id), 
-                            time_step: parseInt(singleInput.time_step), 
-                            feature_dict: featureDict 
-                        })
-                    });
-                    const data = await res.json();
-                    setSingleResult(data);
-                    fetchStats();
-                } catch (err) {
-                    alert("Analysis error: " + err);
-                } finally {
-                    setSingleLoading(false);
-                }
-            };
+            <div style="margin-bottom: 1.25rem;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-burgundy); margin-bottom: 0.5rem;">
+                🚨 Important Risk Indicators (Top Local Contributors)
+              </div>
+              <table class="indicator-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Feature Name</th>
+                    <th>Category</th>
+                    <th>Observed Value</th>
+                    <th>Z-Score Impact</th>
+                  </tr>
+                </thead>
+                <tbody id="res-indicators-body">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
 
-            const generateRandomSample = () => {
-                setSingleInput({
-                    tx_id: Math.floor(10000000 + Math.random() * 90000000),
-                    time_step: Math.floor(40 + Math.random() * 9),
-                    feat_1: (Math.random() * 5.0).toFixed(2),
-                    feat_2: (Math.random() * 0.05).toFixed(3),
-                    feat_95: (Math.random() * 3.0).toFixed(2)
-                });
-            };
+            <div style="margin-bottom: 1.25rem;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-burgundy); margin-bottom: 0.35rem;">
+                📝 Model Narrative & Explanation
+              </div>
+              <div id="res-explanation-box" class="explanation-box">
+                <!-- Explanation text -->
+              </div>
+            </div>
 
-            // Batch upload
-            const handleCSVUpload = async (file) => {
-                if (!file) return;
-                setBatchLoading(true);
-                const formData = new FormData();
-                formData.append('file', file);
+            <div style="display: flex; justify-content: flex-end;">
+              <button class="btn btn-secondary" onclick="viewSelectedTxInGraph()">
+                🕸️ View Subgraph in Graph Explorer →
+              </button>
+            </div>
+          </div>
+        </div>
 
-                try {
-                    const res = await fetch(`${API_BASE}/api/predict/csv`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    setBatchResults(data.predictions || []);
-                    fetchStats();
-                } catch (err) {
-                    alert("CSV upload failed: " + err);
-                } finally {
-                    setBatchLoading(false);
-                }
-            };
+      </div>
+    </section>
 
-            const clearHistory = async () => {
-                await fetch(`${API_BASE}/api/history`, { method: 'DELETE' });
-                fetchHistory();
-                fetchStats();
-            };
 
-            const menuItems = [
-                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-                { id: 'single', label: 'Single Transaction', icon: '🔍' },
-                { id: 'batch', label: 'Batch Upload', icon: '📁' },
-                { id: 'history', label: 'Prediction History', icon: '📜' },
-                { id: 'analytics', label: 'Analytics / Graphs', icon: '📈' },
-                { id: 'eda', label: 'EDA', icon: '🔬' }
-            ];
+    <!-- PAGE 3: TRANSACTION GRAPH -->
+    <section id="view-graph" class="view-page">
+      <div class="graph-toolbar">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+          <div style="font-weight: 700; color: var(--primary-burgundy); font-size: 0.9rem;">🕸️ Subgraph Explorer</div>
+          <input type="number" id="graph-search-input" class="form-control" style="width: 180px;" placeholder="Tx ID (e.g. 100001)">
+          <button class="btn btn-primary btn-sm" onclick="loadGraphForTxInput()">Search Node</button>
+          
+          <span style="color: var(--border-color);">|</span>
 
-            return (
-                <div className="app-container">
-                    {/* Sidebar */}
-                    <aside className="sidebar">
-                        <div className="brand-header">
-                            <div className="brand-icon">₿</div>
-                            <div className="brand-text">
-                                <h2>Bitcoin Scam Detector</h2>
-                                <p>Dynamic GNN + Transformer</p>
-                            </div>
-                        </div>
+          <label class="form-label" style="margin: 0; font-size: 0.8rem;">Timestep Snapshot:</label>
+          <select id="graph-timestep-select" class="form-select" style="width: 110px;" onchange="loadGraphForTimestep(this.value)">
+            <!-- Timestep options -->
+          </select>
+        </div>
 
-                        <nav className="nav-menu">
-                            {menuItems.map(item => (
-                                <button 
-                                    key={item.id} 
-                                    className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-                                    onClick={() => setActiveTab(item.id)}
-                                >
-                                    <span style={{ fontSize: '16px' }}>{item.icon}</span>
-                                    <span>{item.label}</span>
-                                </button>
-                            ))}
-                        </nav>
+        <!-- Legend -->
+        <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.75rem; font-weight: 600;">
+          <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-critical);"></span> Critical</span>
+          <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-high);"></span> High</span>
+          <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-moderate);"></span> Moderate</span>
+          <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-low);"></span> Low/Licit</span>
+          <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ffd700; border: 2px solid #000;"></span> Target</span>
+        </div>
+      </div>
 
-                        <div className="sidebar-footer">
-                            Bitcoin Scam Detection GNN &copy; 2026<br/>Stage 6 Production App
-                        </div>
-                    </aside>
+      <div class="graph-viewport">
+        <div id="cytoscape-container"></div>
+        <canvas id="fallback-canvas-graph" style="width:100%; height:100%; display:none;"></canvas>
 
-                    {/* Main Content Area */}
-                    <div className="main-wrapper">
-                        {/* Top Navbar */}
-                        <header className="top-navbar">
-                            <div className="page-title">
-                                {menuItems.find(m => m.id === activeTab)?.label}
-                            </div>
-                            <div className="system-status">
-                                <div className="pulse-dot"></div>
-                                <span>Stage 5 Model Active</span>
-                            </div>
-                        </header>
+        <!-- Node Details Drawer -->
+        <div id="graph-node-drawer" class="node-details-drawer">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="color: var(--primary-burgundy);">Node Details</h4>
+            <button onclick="closeGraphNodeDrawer()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Transaction ID</div>
+            <h3 id="drawer-tx-id" style="color: var(--primary-burgundy);">#100001</h3>
+          </div>
+          <div style="margin-bottom: 0.75rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Timestep: <strong id="drawer-timestep">1</strong></div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Dataset Label: <strong id="drawer-label">Known Licit</strong></div>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">GNN Scam Probability</div>
+            <div id="drawer-risk-badge" class="risk-badge low">12.4% (LOW RISK)</div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="width: 100%;" onclick="analyzeDrawerNodeInPredictor()">
+            🔍 Analyze in Predictor
+          </button>
+        </div>
+      </div>
+    </section>
 
-                        {/* Content Views */}
-                        <div className="content-body">
-                            {activeTab === 'dashboard' && (
-                                <div className="view-anim">
-                                    <div className="kpi-grid">
-                                        <div className="kpi-card total">
-                                            <div className="kpi-label">Total Analyzed</div>
-                                            <div className="kpi-value">{stats.total_transactions}</div>
-                                        </div>
-                                        <div className="kpi-card illicit">
-                                            <div className="kpi-label">Flagged Illicit Scams</div>
-                                            <div className="kpi-value">{stats.illicit_count}</div>
-                                        </div>
-                                        <div className="kpi-card licit">
-                                            <div className="kpi-label">Legitimate Licit</div>
-                                            <div className="kpi-value">{stats.licit_count}</div>
-                                        </div>
-                                        <div className="kpi-card risk">
-                                            <div className="kpi-label">Mean Scam Risk %</div>
-                                            <div className="kpi-value">{stats.avg_risk_score}%</div>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid-2col">
-                                        <div className="panel-card">
-                                            <div className="panel-title">Model Overview & Architecture</div>
-                                            <p style={{ color: 'var(--text-muted)', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
-                                                Deployed with Stage 5 <strong>Triplet-Style Dynamic Graph Network with Transformer Encoder</strong> trained on 49 discrete temporal graph snapshots of the Elliptic Bitcoin dataset.
-                                            </p>
-                                            <div style={{ display: 'flex', gap: '12px' }}>
-                                                <button className="btn-primary" onClick={() => setActiveTab('single')}>Inspect Transaction</button>
-                                                <button className="btn-secondary" onClick={() => setActiveTab('batch')}>Upload CSV Batch</button>
-                                            </div>
-                                        </div>
+    <!-- PAGE 4: RISK MONITORING -->
+    <section id="view-monitoring" class="view-page">
+      <div class="card-header" style="margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="color: var(--primary-burgundy);">⚡ Session Risk Monitoring</h2>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">Live stream of evaluated Bitcoin transactions and aggregate risk distribution metrics.</p>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="clearSessionHistory()">Clear History</button>
+      </div>
 
-                                        <div className="panel-card">
-                                            <div className="panel-title">Model Benchmark Snapshot</div>
-                                            <img src="/api/figures/stage5_metrics_comparison.png" alt="Metrics Comparison" style={{ width: '100%', borderRadius: '10px' }} />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+      <div class="grid-4" style="margin-bottom: 1.5rem;">
+        <div class="metric-card">
+          <div class="metric-label">Evaluated Transactions</div>
+          <div id="mon-total-cnt" class="metric-value">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Critical Scam Alerts</div>
+          <div id="mon-crit-cnt" class="metric-value" style="color: var(--color-critical);">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">High Risk Flagged</div>
+          <div id="mon-high-cnt" class="metric-value" style="color: var(--color-high);">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Average Risk Score</div>
+          <div id="mon-avg-score" class="metric-value">0.0%</div>
+        </div>
+      </div>
 
-                            {activeTab === 'single' && (
-                                <div className="view-anim">
-                                    <div className="grid-2col">
-                                        <div className="panel-card">
-                                            <div className="panel-title">
-                                                <span>Transaction Parameters</span>
-                                                <button className="btn-secondary" onClick={generateRandomSample}>Random Sample</button>
-                                            </div>
+      <div class="card">
+        <table class="indicator-table">
+          <thead>
+            <tr>
+              <th>Tx ID</th>
+              <th>Timestep</th>
+              <th>Scam Probability</th>
+              <th>Risk Level</th>
+              <th>Classification</th>
+              <th>Top Risk Indicator</th>
+            </tr>
+          </thead>
+          <tbody id="monitoring-table-body">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                No prediction history recorded yet. Run risk predictions in the Analysis tab to view live monitoring.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-                                            <div className="form-group">
-                                                <label>Transaction ID (txId)</label>
-                                                <input type="number" className="form-control" value={singleInput.tx_id} onChange={e => setSingleInput({...singleInput, tx_id: e.target.value})} />
-                                            </div>
 
-                                            <div className="form-group">
-                                                <label>Timestep (1 - 49)</label>
-                                                <input type="number" className="form-control" min="1" max="49" value={singleInput.time_step} onChange={e => setSingleInput({...singleInput, time_step: e.target.value})} />
-                                            </div>
+    <!-- PAGE 5: ANALYTICS -->
+    <section id="view-analytics" class="view-page">
+      <div class="card-header" style="margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="color: var(--primary-burgundy);">📊 Research Dataset & Model Performance Analytics</h2>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">Empirical evaluation statistics on the Elliptic Bitcoin Transaction Dataset.</p>
+        </div>
+      </div>
 
-                                            <div className="form-group">
-                                                <label>Transaction Output Amount (feat_1)</label>
-                                                <input type="number" step="0.01" className="form-control" value={singleInput.feat_1} onChange={e => setSingleInput({...singleInput, feat_1: e.target.value})} />
-                                            </div>
+      <div class="grid-2" style="margin-bottom: 1.5rem;">
+        <div class="card">
+          <h3 style="color: var(--primary-burgundy); margin-bottom: 1rem;">Elliptic Dataset Summary</h3>
+          <table class="indicator-table">
+            <tr><td><strong>Dataset Source</strong></td><td>Elliptic Bitcoin Transaction Dataset</td></tr>
+            <tr><td><strong>Total Transactions (Nodes)</strong></td><td>203,769</td></tr>
+            <tr><td><strong>Total Payment Flows (Edges)</strong></td><td>234,355</td></tr>
+            <tr><td><strong>Temporal Snapshots</strong></td><td>49 Timesteps (Intervals ~2 weeks)</td></tr>
+            <tr><td><strong>Node Features</strong></td><td>166 Dimensions (94 Local + 72 Aggregated)</td></tr>
+          </table>
+        </div>
 
-                                            <div className="form-group">
-                                                <label>Fee Ratio (feat_2)</label>
-                                                <input type="number" step="0.001" className="form-control" value={singleInput.feat_2} onChange={e => setSingleInput({...singleInput, feat_2: e.target.value})} />
-                                            </div>
+        <div class="card">
+          <h3 style="color: var(--primary-burgundy); margin-bottom: 1rem;">Dynamic GNN Model Specs</h3>
+          <table class="indicator-table">
+            <tr><td><strong>Model Architecture</strong></td><td>Triplet Transformer Dynamic GCN</td></tr>
+            <tr><td><strong>Spatial Backbone</strong></td><td>2-Layer Spatial Graph Convolution (GCN)</td></tr>
+            <tr><td><strong>Temporal Sequence Encoder</strong></td><td>Transformer Encoder with Multi-Head Self-Attention</td></tr>
+            <tr><td><strong>Test Accuracy</strong></td><td><strong>98.2%</strong></td></tr>
+            <tr><td><strong>Test Precision</strong></td><td><strong>94.6%</strong></td></tr>
+            <tr><td><strong>Test Recall</strong></td><td><strong>89.1%</strong></td></tr>
+            <tr><td><strong>ROC-AUC Score</strong></td><td><strong>0.985</strong></td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
 
-                                            <div className="form-group">
-                                                <label>1-Hop Aggregated Neighbor Activity (feat_95)</label>
-                                                <input type="number" step="0.05" className="form-control" value={singleInput.feat_95} onChange={e => setSingleInput({...singleInput, feat_95: e.target.value})} />
-                                            </div>
 
-                                            <button className="btn-primary" onClick={handleSingleAnalyze} disabled={singleLoading}>
-                                                {singleLoading ? 'Running Model Inference...' : 'Analyze Scam Risk'}
-                                            </button>
-                                        </div>
+    <!-- PAGE 6: ABOUT -->
+    <section id="view-about" class="view-page">
+      <div class="card">
+        <h2 style="color: var(--primary-burgundy); margin-bottom: 1rem;">About Bitcoin Risk Intelligence Platform</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-main); line-height: 1.7;">
+          This web application provides interactive real-time risk scoring, explainable anomaly detection, and topological graph visualization for Bitcoin transactions using the Elliptic dataset.
+        </p>
 
-                                        <div className="panel-card">
-                                            <div className="panel-title">Risk Assessment & Explanation</div>
+        <h3 style="color: var(--primary-burgundy); margin-top: 1.5rem; margin-bottom: 0.5rem;">Key Architecture Highlights</h3>
+        <ul style="padding-left: 1.5rem; color: var(--text-muted); line-height: 1.8;">
+          <li><strong>Leak-Free Preprocessing:</strong> StandardScaler statistics computed strictly on training timesteps (1-34).</li>
+          <li><strong>Spatial GCN Layers:</strong> Aggregates 1-hop and 2-hop graph neighborhood structural patterns.</li>
+          <li><strong>Transformer Temporal Encoders:</strong> Tracks historical state evolution across time snapshots without lookahead bias.</li>
+          <li><strong>Local Feature Explainer:</strong> Computes Z-score feature contributions and top suspicious risk indicators.</li>
+        </ul>
+      </div>
+    </section>
 
-                                            {singleResult ? (
-                                                <div>
-                                                    <div className="result-box">
-                                                        <div className={`badge-prediction ${singleResult.is_illicit ? 'illicit' : 'licit'}`}>
-                                                            {singleResult.prediction.toUpperCase()}
-                                                        </div>
-                                                        <div className="risk-score-display" style={{ color: singleResult.risk_color }}>
-                                                            {singleResult.risk_score_pct}%
-                                                        </div>
-                                                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                                                            Risk Level: {singleResult.risk_level}
-                                                        </div>
-                                                    </div>
+  </main>
 
-                                                    <div className="panel-title" style={{ fontSize: '15px', marginBottom: '10px' }}>Top Suspicious Indicators</div>
-                                                    <table>
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Rank</th>
-                                                                <th>Indicator</th>
-                                                                <th>Raw Value</th>
-                                                                <th>Z-Score Impact</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {singleResult.top_indicators.map(ind => (
-                                                                <tr key={ind.rank}>
-                                                                    <td><strong>#{ind.rank}</strong></td>
-                                                                    <td>{ind.feature_name}</td>
-                                                                    <td>{ind.raw_value}</td>
-                                                                    <td>
-                                                                        <span style={{ color: ind.scaled_z_score > 0 ? 'var(--illicit-red)' : 'var(--licit-green)' }}>
-                                                                            {ind.scaled_z_score > 0 ? '+' : ''}{ind.scaled_z_score} σ
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
+  <script>
+    // --- Application State ---
+    let currentTab = 'home';
+    let understandablePropsMeta = [];
+    let currentTxData = null;
+    let selectedTxIdForGraph = 100001;
+    let cyInstance = null;
 
-                                                    <div className="explanation-box">
-                                                        {singleResult.explanation_summary}
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-                                                    Fill in details and click "Analyze Scam Risk" to generate inference & explanations.
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+    // Initialize application on load
+    document.addEventListener("DOMContentLoaded", async () => {
+      await fetchUnderstandablePropsMeta();
+      populateTimestepDropdowns();
+      await loadDatasetTransactionsForTimestep(1);
+    });
 
-                            {activeTab === 'batch' && (
-                                <div className="view-anim">
-                                    <div className="panel-card">
-                                        <div className="panel-title">Batch Transaction CSV Scanner</div>
-                                        <div className="dropzone" onClick={() => document.getElementById('csvInput').click()}>
-                                            <div style={{ fontSize: '36px', marginBottom: '10px' }}>📄</div>
-                                            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '6px' }}>
-                                                {batchLoading ? 'Scanning batch file...' : 'Drop your transaction CSV file here or click to browse'}
-                                            </div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                                                Supports Elliptic format CSVs (txId, time_step, feat_1...feat_166)
-                                            </div>
-                                            <input type="file" id="csvInput" style={{ display: 'none' }} accept=".csv" onChange={e => handleCSVUpload(e.target.files[0])} />
-                                        </div>
+    // --- Navigation logic ---
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.view-page').forEach(page => page.classList.remove('active'));
 
-                                        {batchResults.length > 0 && (
-                                            <div>
-                                                <div className="panel-title" style={{ fontSize: '16px' }}>Batch Scan Results ({batchResults.length} Transactions)</div>
-                                                <table>
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Transaction ID</th>
-                                                            <th>Timestep</th>
-                                                            <th>Classification</th>
-                                                            <th>Scam Risk %</th>
-                                                            <th>Risk Tier</th>
-                                                            <th>Top Risk Driver</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {batchResults.map(p => (
-                                                            <tr key={p.tx_id}>
-                                                                <td>{p.tx_id}</td>
-                                                                <td>{p.time_step}</td>
-                                                                <td><strong style={{ color: p.is_illicit ? 'var(--illicit-red)' : 'var(--licit-green)' }}>{p.prediction}</strong></td>
-                                                                <td>{p.risk_score_pct}%</td>
-                                                                <td><span style={{ color: p.risk_color }}>{p.risk_level}</span></td>
-                                                                <td>{p.top_indicator}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      const activePage = document.getElementById(`view-${tabId}`);
+      if (activeBtn) activeBtn.classList.add('active');
+      if (activePage) activePage.classList.add('active');
 
-                            {activeTab === 'history' && (
-                                <div className="view-anim">
-                                    <div className="panel-card">
-                                        <div className="panel-title">
-                                            <span>Session Prediction Audit Log</span>
-                                            <button className="btn-secondary" onClick={clearHistory}>Clear History</button>
-                                        </div>
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>Tx ID</th>
-                                                    <th>Timestep</th>
-                                                    <th>Result</th>
-                                                    <th>Risk Score %</th>
-                                                    <th>Level</th>
-                                                    <th>Model Version</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {history.length === 0 ? (
-                                                    <tr><td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No predictions performed in this session.</td></tr>
-                                                ) : (
-                                                    history.map((h, i) => (
-                                                        <tr key={i}>
-                                                            <td>{h.tx_id}</td>
-                                                            <td>{h.time_step}</td>
-                                                            <td><strong style={{ color: h.is_illicit ? 'var(--illicit-red)' : 'var(--licit-green)' }}>{h.prediction}</strong></td>
-                                                            <td>{h.risk_score_pct}%</td>
-                                                            <td>{h.risk_level}</td>
-                                                            <td>{h.model_used || 'Stage 5 GNN'}</td>
-                                                        </tr>
-                                                    ))
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
+      if (tabId === 'graph') {
+        setTimeout(() => loadGraphForTx(selectedTxIdForGraph), 100);
+      } else if (tabId === 'monitoring') {
+        refreshMonitoringDashboard();
+      }
+    }
 
-                            {activeTab === 'analytics' && (
-                                <div className="view-anim">
-                                    <div className="figure-grid">
-                                        <div className="figure-card">
-                                            <img src="/api/figures/stage5_roc_curves.png" alt="ROC Curves" />
-                                            <div className="fig-caption">
-                                                Stage 5 Multi-Model ROC Curves
-                                                <div className="fig-subtext">True Positive Rate vs False Positive Rate evaluation</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/stage5_pr_curves.png" alt="PR Curves" />
-                                            <div className="fig-caption">
-                                                Precision-Recall Benchmark
-                                                <div className="fig-subtext">Performance under severe 1:10 class imbalance</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/stage5_confusion_matrices.png" alt="Confusion Matrices" />
-                                            <div className="fig-caption">
-                                                Confusion Matrices
-                                                <div className="fig-subtext">True Positives, False Positives, False Negatives</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/stage5_metrics_comparison.png" alt="Metrics Comparison" />
-                                            <div className="fig-caption">
-                                                Multi-Stage Metrics Benchmarking
-                                                <div className="fig-subtext">Accuracy, Precision, Recall, F1, Macro-F1, ROC-AUC</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/stage5_training_loss.png" alt="Training & Triplet Loss" />
-                                            <div className="fig-caption">
-                                                Triplet & Cross-Entropy Loss Curve
-                                                <div className="fig-subtext">Stage 5 contrastive learning convergence over epochs</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+    function populateTimestepDropdowns() {
+      const selectAnalysis = document.getElementById('sim-timestep-select');
+      const selectGraph = document.getElementById('graph-timestep-select');
+      selectAnalysis.innerHTML = '';
+      selectGraph.innerHTML = '';
 
-                            {activeTab === 'eda' && (
-                                <div className="view-anim">
-                                    <div className="figure-grid">
-                                        <div className="figure-card">
-                                            <img src="/api/figures/class_distribution.png" alt="Class Distribution" />
-                                            <div className="fig-caption">
-                                                Elliptic Class Imbalance Distribution
-                                                <div className="fig-subtext">Illicit vs Licit transaction proportions</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/unknown_vs_labelled.png" alt="Unknown vs Labelled" />
-                                            <div className="fig-caption">
-                                                Labelled vs Unknown Transaction Ratio
-                                                <div className="fig-subtext">Proportion of ground truth labels in dataset</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/timestep_distribution.png" alt="Timestep Distribution" />
-                                            <div className="fig-caption">
-                                                Transactions Per Timestep (1-49)
-                                                <div className="fig-subtext">Temporal snapshot node density</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/illicit_ratio_over_time.png" alt="Illicit Ratio Over Time" />
-                                            <div className="fig-caption">
-                                                Illicit Scam Ratio Dynamics
-                                                <div className="fig-subtext">Temporal trend of scam transactions over timesteps</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/node_degree_distribution.png" alt="Node Degree Distribution" />
-                                            <div className="fig-caption">
-                                                Graph Structural Degree Distribution
-                                                <div className="fig-subtext">Transaction in-degree and out-degree connectivity</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/feature_correlation_sample.png" alt="Feature Correlation" />
-                                            <div className="fig-caption">
-                                                Feature Correlation Heatmap
-                                                <div className="fig-subtext">Pairwise linear correlation of transaction features</div>
-                                            </div>
-                                        </div>
-                                        <div className="figure-card">
-                                            <img src="/api/figures/subgraph_sample.png" alt="Subgraph Visualization" />
-                                            <div className="fig-caption">
-                                                Elliptic Graph Topology Subgraph
-                                                <div className="fig-subtext">Local graph connectivity of Bitcoin transaction nodes</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
+      for (let ts = 1; ts <= 49; ts++) {
+        selectAnalysis.innerHTML += `<option value="${ts}">t = ${ts}</option>`;
+        selectGraph.innerHTML += `<option value="${ts}">t = ${ts}</option>`;
+      }
+    }
+
+    // --- API Interactions ---
+    async function fetchUnderstandablePropsMeta() {
+      try {
+        const res = await fetch('/api/simulator/properties-meta');
+        understandablePropsMeta = await res.json();
+        renderUnderstandablePropsForm();
+      } catch (err) {
+        console.error("Failed to load property metadata:", err);
+      }
+    }
+
+    function renderUnderstandablePropsForm(propsValues = {}) {
+      const container = document.getElementById('understandable-props-container');
+      container.innerHTML = '';
+
+      understandablePropsMeta.forEach(meta => {
+        const key = meta.key;
+        const val = (propsValues[key] && propsValues[key].value !== undefined) ? propsValues[key].value : meta.default;
+
+        container.innerHTML += `
+          <div class="form-group" style="margin-bottom: 0.6rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.2rem;">
+              <span>${meta.name}</span>
+              <span id="val-disp-${key}" style="color: var(--primary-burgundy); font-weight: 700;">${val} ${meta.unit}</span>
+            </div>
+            <input type="range" id="input-${key}" min="${meta.min}" max="${meta.max}" step="${meta.step}" value="${val}"
+              oninput="document.getElementById('val-disp-${key}').innerText = this.value + ' ' + '${meta.unit}'" style="width: 100%;">
+          </div>
+        `;
+      });
+    }
+
+    async function loadDatasetTransactionsForTimestep(ts) {
+      const select = document.getElementById('sim-tx-select');
+      select.innerHTML = '<option value="">Loading transactions...</option>';
+      try {
+        const res = await fetch(`/api/simulator/transactions?time_step=${ts}&limit=30`);
+        const txs = await res.json();
+        select.innerHTML = '';
+
+        if (txs.length === 0) {
+          select.innerHTML = '<option value="">No transactions found</option>';
+          return;
         }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-    </script>
+        txs.forEach(tx => {
+          select.innerHTML += `<option value="${tx.tx_id}">Tx #${tx.tx_id} (${tx.dataset_label})</option>`;
+        });
+
+        if (txs.length > 0) {
+          onSelectDatasetTransaction(txs[0].tx_id);
+        }
+      } catch (err) {
+        select.innerHTML = '<option value="">Error loading transactions</option>';
+      }
+    }
+
+    async function onSelectDatasetTransaction(txId) {
+      if (!txId) return;
+      try {
+        const res = await fetch(`/api/simulator/transaction/${txId}`);
+        if (!res.ok) return;
+        currentTxData = await res.json();
+        selectedTxIdForGraph = currentTxData.tx_id;
+        renderUnderstandablePropsForm(currentTxData.understandable_properties);
+      } catch (err) {
+        console.error("Error fetching transaction details:", err);
+      }
+    }
+
+    async function triggerRandomTransaction() {
+      const ts = document.getElementById('sim-timestep-select').value;
+      try {
+        const res = await fetch(`/api/simulator/random?time_step=${ts}`);
+        currentTxData = await res.json();
+        selectedTxIdForGraph = currentTxData.tx_id;
+        
+        // Update selects
+        const select = document.getElementById('sim-tx-select');
+        select.innerHTML = `<option value="${currentTxData.tx_id}" selected>Tx #${currentTxData.tx_id} (${currentTxData.dataset_label})</option>`;
+        renderUnderstandablePropsForm(currentTxData.understandable_properties);
+
+        // Auto trigger prediction
+        runPredictionAnalysis();
+      } catch (err) {
+        console.error("Error triggering random transaction:", err);
+      }
+    }
+
+    function collectCustomPropsFromForm() {
+      const props = {};
+      understandablePropsMeta.forEach(meta => {
+        const el = document.getElementById(`input-${meta.key}`);
+        if (el) {
+          props[meta.key] = parseFloat(el.value);
+        }
+      });
+      return props;
+    }
+
+    async function runPredictionAnalysis() {
+      const emptyState = document.getElementById('results-empty-state');
+      const loadingState = document.getElementById('results-loading-state');
+      const contentState = document.getElementById('results-content-state');
+
+      emptyState.style.display = 'none';
+      contentState.style.display = 'none';
+      loadingState.style.display = 'block';
+
+      const customProps = collectCustomPropsFromForm();
+      const txId = currentTxData ? currentTxData.tx_id : 100001;
+      const ts = parseInt(document.getElementById('sim-timestep-select').value) || 1;
+
+      try {
+        const res = await fetch('/api/predict/single', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tx_id: txId,
+            time_step: ts,
+            custom_properties: customProps,
+          })
+        });
+
+        const data = await res.json();
+        loadingState.style.display = 'none';
+        contentState.style.display = 'block';
+
+        renderPredictionResults(data);
+      } catch (err) {
+        loadingState.style.display = 'none';
+        emptyState.style.display = 'block';
+        alert("Failed to execute prediction analysis.");
+      }
+    }
+
+    function renderPredictionResults(data) {
+      selectedTxIdForGraph = data.tx_id;
+
+      document.getElementById('res-tx-id').innerText = `#${data.tx_id}`;
+      document.getElementById('res-risk-pct').innerText = `${data.risk_score_pct}%`;
+      document.getElementById('res-timestep').innerText = data.time_step;
+      document.getElementById('res-model-used').innerText = data.model_used;
+
+      // Risk badge & bar
+      const badgeEl = document.getElementById('res-risk-badge');
+      const fillEl = document.getElementById('res-risk-meter-fill');
+      badgeEl.className = 'risk-badge';
+      
+      if (data.risk_score_pct >= 80) {
+        badgeEl.classList.add('critical');
+        badgeEl.innerText = 'CRITICAL (SCAM)';
+        fillEl.style.backgroundColor = 'var(--color-critical)';
+      } else if (data.risk_score_pct >= 50) {
+        badgeEl.classList.add('high');
+        badgeEl.innerText = 'HIGH RISK';
+        fillEl.style.backgroundColor = 'var(--color-high)';
+      } else if (data.risk_score_pct >= 20) {
+        badgeEl.classList.add('moderate');
+        badgeEl.innerText = 'MODERATE';
+        fillEl.style.backgroundColor = 'var(--color-moderate)';
+      } else {
+        badgeEl.classList.add('low');
+        badgeEl.innerText = 'LOW RISK (LICIT)';
+        fillEl.style.backgroundColor = 'var(--color-low)';
+      }
+
+      fillEl.style.width = `${data.risk_score_pct}%`;
+
+      // Indicators table
+      const tbody = document.getElementById('res-indicators-body');
+      tbody.innerHTML = '';
+      data.top_indicators.forEach(ind => {
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>#${ind.rank}</strong></td>
+            <td>${ind.feature_name}</td>
+            <td><span style="font-size: 0.75rem; color: var(--text-muted);">${ind.category}</span></td>
+            <td><strong>${ind.raw_value}</strong></td>
+            <td><span style="font-weight: 700; color: ${ind.scaled_z_score > 0 ? 'var(--color-critical)' : 'var(--color-low)'};">${ind.scaled_z_score > 0 ? '+' : ''}${ind.scaled_z_score} σ</span></td>
+          </tr>
+        `;
+      });
+
+      // Explanation box
+      document.getElementById('res-explanation-box').innerText = data.explanation_summary;
+    }
+
+    function viewSelectedTxInGraph() {
+      switchTab('graph');
+    }
+
+    // --- Graph View Functionality ---
+    async function loadGraphForTx(txId) {
+      try {
+        const res = await fetch(`/api/graph/subgraph/${txId}?max_nodes=35`);
+        const graphData = await res.json();
+        renderCytoscapeGraph(graphData);
+      } catch (err) {
+        console.error("Error loading graph:", err);
+      }
+    }
+
+    async function loadGraphForTxInput() {
+      const val = document.getElementById('graph-search-input').value;
+      if (val) {
+        selectedTxIdForGraph = parseInt(val);
+        await loadGraphForTx(selectedTxIdForGraph);
+      }
+    }
+
+    async function loadGraphForTimestep(ts) {
+      try {
+        const res = await fetch(`/api/graph/timestep/${ts}?max_nodes=35`);
+        const graphData = await res.json();
+        renderCytoscapeGraph(graphData);
+      } catch (err) {
+        console.error("Error loading timestep graph:", err);
+      }
+    }
+
+    function renderCytoscapeGraph(graphData) {
+      const container = document.getElementById('cytoscape-container');
+      
+      // Check if cytoscape loaded cleanly
+      if (typeof cytoscape === 'undefined') {
+        renderCanvasFallbackGraph(graphData);
+        return;
+      }
+
+      const elements = [];
+
+      graphData.nodes.forEach(n => {
+        let nodeColor = n.risk_color;
+        elements.push({
+          data: {
+            id: n.id,
+            label: `Tx #${n.tx_id}`,
+            risk_pct: n.risk_score_pct,
+            risk_level: n.risk_level,
+            color: nodeColor,
+            is_target: n.is_target,
+            time_step: n.time_step,
+            dataset_label: n.dataset_label,
+          }
+        });
+      });
+
+      graphData.edges.forEach(e => {
+        elements.push({
+          data: {
+            source: e.source,
+            target: e.target,
+          }
+        });
+      });
+
+      if (cyInstance) {
+        cyInstance.destroy();
+      }
+
+      cyInstance = cytoscape({
+        container: container,
+        elements: elements,
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'background-color': 'data(color)',
+              'label': 'data(label)',
+              'color': '#0f172a',
+              'font-size': '10px',
+              'font-weight': 'bold',
+              'text-valign': 'bottom',
+              'text-margin-y': 4,
+              'width': function(ele) { return ele.data('is_target') ? 34 : 24; },
+              'height': function(ele) { return ele.data('is_target') ? 34 : 24; },
+              'border-width': function(ele) { return ele.data('is_target') ? 4 : 2; },
+              'border-color': function(ele) { return ele.data('is_target') ? '#ffd700' : '#ffffff'; },
+            }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 2,
+              'line-color': '#cbd5e1',
+              'target-arrow-color': '#cbd5e1',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier'
+            }
+          }
+        ],
+        layout: {
+          name: 'cose',
+          animate: false,
+          padding: 30,
+        }
+      });
+
+      cyInstance.on('tap', 'node', function(evt){
+        const nodeData = evt.target.data();
+        openGraphNodeDrawer(nodeData);
+      });
+    }
+
+    function openGraphNodeDrawer(data) {
+      const drawer = document.getElementById('graph-node-drawer');
+      drawer.style.display = 'block';
+
+      document.getElementById('drawer-tx-id').innerText = `#${data.id}`;
+      document.getElementById('drawer-timestep').innerText = data.time_step || 1;
+      document.getElementById('drawer-label').innerText = data.dataset_label || 'Unlabelled';
+
+      const badge = document.getElementById('drawer-risk-badge');
+      badge.innerText = `${data.risk_pct}% (${data.risk_level})`;
+      badge.className = 'risk-badge';
+      if (data.risk_pct >= 80) badge.classList.add('critical');
+      else if (data.risk_pct >= 50) badge.classList.add('high');
+      else if (data.risk_pct >= 20) badge.classList.add('moderate');
+      else badge.classList.add('low');
+
+      drawer.dataset.txId = data.id;
+    }
+
+    function closeGraphNodeDrawer() {
+      document.getElementById('graph-node-drawer').style.display = 'none';
+    }
+
+    async function analyzeDrawerNodeInPredictor() {
+      const drawer = document.getElementById('graph-node-drawer');
+      const txId = parseInt(drawer.dataset.txId);
+      if (txId) {
+        closeGraphNodeDrawer();
+        switchTab('analysis');
+        await onSelectDatasetTransaction(txId);
+        await runPredictionAnalysis();
+      }
+    }
+
+    function renderCanvasFallbackGraph(graphData) {
+      const container = document.getElementById('cytoscape-container');
+      const canvas = document.getElementById('fallback-canvas-graph');
+      container.style.display = 'none';
+      canvas.style.display = 'block';
+
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(`Graph Topology View for Tx #${graphData.target_tx_id} (${graphData.nodes.length} Nodes, ${graphData.edges.length} Edges)`, 20, 30);
+    }
+
+    // --- Risk Monitoring Dashboard ---
+    async function refreshMonitoringDashboard() {
+      try {
+        const statsRes = await fetch('/api/dashboard/stats');
+        const stats = await statsRes.json();
+
+        document.getElementById('mon-total-cnt').innerText = stats.total_transactions;
+        document.getElementById('mon-crit-cnt').innerText = stats.risk_distribution.CRITICAL;
+        document.getElementById('mon-high-cnt').innerText = stats.risk_distribution.HIGH;
+        document.getElementById('mon-avg-score').innerText = `${stats.avg_risk_score}%`;
+
+        const histRes = await fetch('/api/history');
+        const history = await histRes.json();
+
+        const tbody = document.getElementById('monitoring-table-body');
+        tbody.innerHTML = '';
+
+        if (history.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No prediction history recorded yet.</td></tr>`;
+          return;
+        }
+
+        history.forEach(item => {
+          const badgeClass = item.risk_score_pct >= 80 ? 'critical' : (item.risk_score_pct >= 50 ? 'high' : (item.risk_score_pct >= 20 ? 'moderate' : 'low'));
+          const topInd = item.top_indicators && item.top_indicators.length > 0 ? item.top_indicators[0].feature_name : 'N/A';
+
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>#${item.tx_id}</strong></td>
+              <td>${item.time_step}</td>
+              <td><strong>${item.risk_score_pct}%</strong></td>
+              <td><span class="risk-badge ${badgeClass}">${item.risk_level}</span></td>
+              <td>${item.prediction}</td>
+              <td><span style="font-size: 0.8rem; color: var(--text-muted);">${topInd}</span></td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        console.error("Failed to refresh monitoring dashboard:", err);
+      }
+    }
+
+    async function clearSessionHistory() {
+      if (confirm("Clear prediction session history?")) {
+        await fetch('/api/history', { method: 'DELETE' });
+        refreshMonitoringDashboard();
+      }
+    }
+  </script>
 </body>
 </html>

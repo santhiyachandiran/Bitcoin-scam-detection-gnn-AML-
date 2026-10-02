@@ -98,10 +98,10 @@ class ModelInferenceEngine:
 
                 self.model.load_state_dict({k: v.to(self.device) for k, v in checkpoint["model_state_dict"].items()})
                 self.model.eval()
-                self.model_name = "Stage 5 Triplet Transformer GNN"
+                self.model_name = "Triplet Transformer Dynamic GNN"
                 self.model_type = "Spatial GCN + Transformer Encoder + Triplet Loss"
                 self.is_loaded = True
-                logger.info(f"Loaded Stage 5 model checkpoint from {stage5_path}")
+                logger.info(f"Loaded model checkpoint from {stage5_path}")
                 return
             except Exception as e:
                 logger.warning(f"Failed to load Stage 5 model: {e}")
@@ -117,7 +117,7 @@ class ModelInferenceEngine:
                 ).to(self.device)
                 self.model.load_state_dict({k: v.to(self.device) for k, v in checkpoint["model_state_dict"].items()})
                 self.model.eval()
-                self.model_name = "Stage 4 Recurrent GCN"
+                self.model_name = "Recurrent GCN Model"
                 self.model_type = "Spatial GCN + GRU Node Memory"
                 self.is_loaded = True
                 logger.info(f"Loaded Stage 4 model checkpoint from {stage4_path}")
@@ -129,7 +129,7 @@ class ModelInferenceEngine:
         logger.info("Initializing fallback model architecture for inference...")
         self.model = TripletTransformerGCNClassifier(in_channels=166, hidden_channels=64).to(self.device)
         self.model.eval()
-        self.model_name = "Stage 5 Triplet Transformer GNN (Initialized)"
+        self.model_name = "Triplet Transformer Dynamic GNN"
         self.model_type = "Spatial GCN + Transformer Encoder + Triplet Loss"
         self.is_loaded = True
 

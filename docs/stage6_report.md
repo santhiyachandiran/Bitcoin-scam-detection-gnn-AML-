@@ -1,125 +1,103 @@
-# Stage 6 Report: Production Web Application & Explainable AI Engine
+# Stage 6 Report: Production Web Application, Interactive Graph Explorer & Explainable AI Engine
 
 ## 1. Overview & Objectives
 
-Stage 6 completes the **Bitcoin Scam Detection Using Dynamic Graph Neural Networks** project by deploying the trained Stage 5 **Triplet Transformer Dynamic GNN** into an interactive web application.
+Stage 6 deploys the trained **Triplet Transformer Dynamic GNN** model into a production-grade, interactive web application.
 
-### Key Objectives
-1. **Interactive Demo Platform**: Deliver a responsive UI for anti-money laundering (AML) analysts and academic reviewers.
-2. **Dual-Input Mode**: Support both single transaction inspection (manual input) and batch CSV transaction processing.
-3. **Stage 2 Preprocessing Pipeline Reuse**: Ensure strict feature standardization using the frozen `scaler.pt` from Stage 2.
-4. **Stage 5 Model Inference**: Perform real-time inference using the trained `triplet_transformer_gcn_model.pth` checkpoint without retraining or modifying weights.
-5. **Explainable AI (XAI)**: Generate feature-level risk contributions (Z-scores) and clear natural language explanations for flagged transactions.
-6. **Monitoring Dashboard**: Provide live session metrics (KPI cards, risk distribution, trends) and integrate EDA visualization galleries from Stages 1–5.
-7. **Session History**: Maintain in-memory prediction audit logs for real-time tracking during analyst sessions.
+### Key Objectives & Design Principles:
+1. **Interactive Web Application**: Deliver a responsive single-page web application featuring tabbed section navigation (Home, Transaction Analysis, Transaction Graph, Risk Monitoring, Analytics, About).
+2. **No CSV Upload Requirement**: Completely removed CSV upload workflow in favor of an interactive transaction analysis platform.
+3. **Elliptic Dataset Integration**: Uses the locally stored Elliptic Bitcoin Transaction Dataset (203,769 transactions, 234,355 directed edges, 49 timesteps) as the sole research dataset.
+4. **Offline Model Inference Engine**: Loads the trained Stage 5 `triplet_transformer_gcn_model.pth` checkpoint and Stage 2 `scaler.pt`. Performs inference without retraining.
+5. **Built-in Transaction Simulator**:
+   - Allows users to select dataset transactions by ID or filter by timestep (1–49).
+   - Provides random transaction generation.
+   - Offers a custom-input form for understandable transaction properties (BTC volume, fee ratio, input/output address counts, CoinJoin mix ratio, fee variance, average input value, time delay, address reuse count).
+   - Hides raw 166-feature vectors from the end user.
+6. **Dedicated Interactive Graph Page**:
+   - Visualizes 2-hop local subgraphs and snapshot graph topologies around target transaction nodes.
+   - Powered by Cytoscape.js with zooming, panning, layout toggles, node selection, and highlighting of high-risk nodes.
+   - Interactive node details drawer displaying node risk probability and direct option to analyze in predictor.
+7. **UI/UX Aesthetics**:
+   - Clean **LIGHT WHITE THEME** with white background, deep burgundy (`#7a0c2e`), and light red (`#dc2626`) accents.
+   - Professional academic / startup aesthetic.
+   - No dark mode, no glassmorphism.
+   - Stage numbers omitted from UI strings.
 
 ---
 
-## 2. Web Application Architecture
+## 2. Web Application System Architecture
 
 ```
-[ Web Browser Frontend ]
+[ Interactive Light-Theme SPA (src/frontend/index.html) ]
+    ├── Tab Navigation (Home, Analysis, Graph, Monitoring, Analytics, About)
+    ├── Understandable Parameter Controls Form
+    └── Cytoscape.js Network Graph Renderer
          │
-         │ REST API (JSON / Multipart CSV)
+         │ REST API (JSON)
          ▼
-[ Python FastAPI Server (src/backend/main.py) ]
+[ FastAPI Backend Server (src/backend/main.py) ]
     ├── Model Inference Engine (src/backend/inference.py)
     │     ├── Scaler Loader (data/processed/scaler.pt)
     │     └── Triplet Transformer Model (models/triplet_transformer_gcn_model.pth)
     ├── Explainability Engine (src/backend/explainability.py)
-    │     ├── Baseline Stats (data/processed/elliptic_features.pt)
-    │     └── Feature Z-Score Contributor Analysis
-    └── Asset Server
-          ├── Stage 1–5 Figures (reports/figures/)
-          └── Web Application Assets (src/frontend/)
+    │     └── Z-Score Impact Contributor Analysis
+    └── Dataset Simulator & Graph Provider (src/backend/simulator.py)
+          ├── PyG Data Loader (data/processed/elliptic_pyg_data.pt)
+          ├── Transaction Index & Property Mapper
+          └── Subgraph Extraction Engine
 ```
-
-### Components
-
-#### A. Backend API (`src/backend/main.py`)
-- Framework: FastAPI + Uvicorn.
-- Features: CORS enabled, auto-mounts static figure endpoints, exposes REST API endpoints, and serves SPA static files.
-
-#### B. Preprocessing & Inference Engine (`src/backend/inference.py`)
-- Loads `scaler.pt` saved during Stage 2 preprocessing.
-- Reconstructs `TripletTransformerGCNClassifier` architecture (GCNConv + TransformerEncoder + Triplet Loss Margin Head).
-- Loads state dict from `models/triplet_transformer_gcn_model.pth`.
-- Implements single transaction and batch array preprocessing (166 features).
-- Outputs sigmoid probability score $P(\text{Illicit})$, class label (`Illicit` if $P \ge 0.50$, else `Licit`), risk level (`CRITICAL`, `HIGH`, `MODERATE`, `LOW`), and inference latency (ms).
-
-#### C. Explainability Engine (`src/backend/explainability.py`)
-- Calculates population baseline statistics (mean and standard deviation per feature) from `data/processed/elliptic_features.pt`.
-- Computes feature Z-scores for incoming test transactions to measure deviation from normal transaction distributions.
-- Ranks top 5 contributing features for risk score calculation.
-- Generates natural language summaries explaining why a transaction was flagged as suspicious.
-
-#### D. React Single-Page Application (`src/frontend/index.html`)
-- Built using React 18, Babel standalone, and Lucide icons via CDN.
-- Styled with CSS3 modern dark theme (glassmorphism, vibrant neon accents, high contrast readability).
-- Sections:
-  1. **Monitoring Dashboard**: Live KPIs (Total, Licit, Illicit, High Risk counts, Average Risk Score).
-  2. **Single Transaction Inspector**: Form inputs for transaction ID, timestep, and feature values with automated risk scoring & explanation drawer.
-  3. **Batch CSV Uploader**: Drag-and-drop CSV file uploader with preview table and risk sorting.
-  4. **Live History & Analytics**: Real-time tabular audit log of session predictions with CSV export functionality.
-  5. **EDA & Pipeline Gallery**: Interactive modal/image gallery featuring visualizations from Stages 1–5.
 
 ---
 
 ## 3. API Endpoints Reference
 
-| Endpoint | Method | Input | Output Description |
+| Endpoint | Method | Parameters | Description |
 |---|---|---|---|
-| `/api/predict` | `POST` | JSON (`tx_id`, `time_step`, `features`) | Single transaction prediction, risk score, top indicators, and explanation. |
-| `/api/predict/csv` | `POST` | CSV file upload | Batch prediction summary table with individual transaction scores and indicators. |
-| `/api/dashboard/stats` | `GET` | None | Session aggregate metrics (totals, counts, average risk score, risk distribution). |
-| `/api/history` | `GET` | None | Complete list of predictions executed in the current session. |
-| `/api/history/clear` | `DELETE` | None | Resets session prediction history and stats. |
-| `/api/figures` | `GET` | None | List of available figure URLs from Stages 1–5 reports. |
+| `/api/health` | `GET` | None | API health status, loaded model info, and simulator status. |
+| `/api/simulator/transactions` | `GET` | `time_step`, `filter_class`, `search_query`, `limit` | List dataset transactions matching filters. |
+| `/api/simulator/transaction/{tx_id}` | `GET` | `tx_id` | Fetch details and understandable properties for a transaction. |
+| `/api/simulator/random` | `GET` | `time_step`, `filter_class` | Pick a random transaction from the local dataset. |
+| `/api/simulator/properties-meta` | `GET` | None | Metadata schema for understandable transaction properties. |
+| `/api/predict/single` | `POST` | JSON (`tx_id`, `time_step`, `custom_properties`, `features`) | Run GNN prediction, risk scoring, top risk indicators, and explanation. |
+| `/api/graph/subgraph/{tx_id}` | `GET` | `tx_id`, `max_nodes` | Extract 2-hop local subgraph topology with node risk predictions. |
+| `/api/graph/timestep/{time_step}` | `GET` | `time_step`, `max_nodes` | Fetch timestep network snapshot topology with risk scores. |
+| `/api/dashboard/stats` | `GET` | None | Session aggregate metrics and risk distribution counts. |
+| `/api/history` | `GET` | `limit` | Retrieve session prediction history log. |
+| `/api/history` | `DELETE` | None | Clear session prediction history. |
+| `/api/analytics/summary` | `GET` | None | Dataset overview and model evaluation performance metrics. |
 
 ---
 
 ## 4. Verification & Testing
 
-The Stage 6 web application and underlying modules were validated using `pytest`:
+All backend components, simulator functions, graph routes, explainability calculations, and UI serve endpoints were validated using `pytest`:
 
 ```bash
-python -m pytest tests/
+python -m pytest tests/test_stage6.py
 ```
 
-### Test Results
-- Total Tests: 28
-- Status: **28 Passed, 0 Failed**
-- Stage 6 Specific Tests (`tests/test_stage6.py`):
-  1. `test_inference_engine_single`: Validates single vector scaling and forward pass probability.
-  2. `test_inference_engine_batch`: Validates multi-row matrix inference.
-  3. `test_explainer_contributions`: Validates Z-score ranking and top feature extraction.
-  4. `test_api_health`: Validates `/api/health` status route.
-  5. `test_api_predict`: Validates POST `/api/predict` endpoint response structure.
-  6. `test_api_predict_csv`: Validates POST `/api/predict/csv` file upload parsing and predictions.
-  7. `test_api_dashboard_stats`: Validates GET `/api/dashboard/stats` metrics calculation.
+### Test Results:
+- Total Tests: 9 Passed / 0 Failed
+- Validated components:
+  1. `test_inference_engine_prediction`: Model loading, scaling, single/batch prediction.
+  2. `test_transaction_explainer`: Z-score deviation ranking, natural language summary construction.
+  3. `test_dataset_simulator_and_subgraph`: Dataset transaction queries, random generation, property mapping, and subgraph topology extraction.
+  4. `test_fastapi_health_route`: Health check API response.
+  5. `test_fastapi_simulator_routes`: Simulator transactions list, metadata, and random tx routes.
+  6. `test_fastapi_predict_single_route`: Prediction analysis with custom parameter form payload.
+  7. `test_fastapi_graph_routes`: Subgraph and timestep network API endpoints.
+  8. `test_fastapi_dashboard_stats_and_analytics`: Session monitoring stats, history logging, clear history, and analytics summary.
+  9. `test_serve_frontend_index`: Single-page app HTML rendering without CSV upload UI.
 
 ---
 
 ## 5. Execution Instructions
 
-To launch the web application locally:
+To start the web application locally:
 
 ```bash
 python -m uvicorn src.backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Open a browser and navigate to:
-`http://127.0.0.1:8000`
-
----
-
-## 6. Project Completion Summary
-
-All 6 project stages are complete, fully verified, and tested:
-
-- **Stage 1**: Exploratory Data Analysis & Graph Structural Analytics.
-- **Stage 2**: Temporal Graph Construction, Preprocessing & Scaling (`scaler.pt`).
-- **Stage 3**: Non-Temporal Baselines (Logistic Regression, Random Forest, Transductive GCN).
-- **Stage 4**: Causal Dynamic Temporal GNN (Snapshot GRU + GCN).
-- **Stage 5**: Triplet Transformer Dynamic GNN (Margin Triplet Loss + Transformer Attention).
-- **Stage 6**: Production Web Application, Explainability Engine, and Live Monitoring Dashboard.
+Open a browser and navigate to: `http://127.0.0.1:8000`
